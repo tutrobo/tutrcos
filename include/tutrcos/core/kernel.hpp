@@ -9,6 +9,8 @@ namespace core {
 
 class Kernel {
 public:
+  static constexpr uint32_t MAX_DELAY = osWaitForever;
+
   static inline uint32_t get_ticks() { return osKernelGetTickCount(); }
 };
 
