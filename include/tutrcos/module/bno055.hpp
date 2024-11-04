@@ -9,6 +9,38 @@
 namespace tutrcos {
 namespace module {
 
+/**
+ * @code{.cpp}
+ * #include <cstdio>
+ * #include <tutrcos.hpp>
+ * #include <tutrcos/module/bno055.hpp>
+ *
+ * extern UART_HandleTypeDef huart2;
+ * extern UART_HandleTypeDef huart3;
+ *
+ * extern "C" void main_thread(void *) {
+ *   using namespace tutrcos::core;
+ *   using namespace tutrcos::peripheral;
+ *   using namespace tutrcos::module;
+ *
+ *   UART uart2(&huart2);
+ *   uart2.enable_printf(); // デバッグ用printf有効化
+ *
+ *   UART uart3(&huart3);
+ *   BNO055 bno055(uart3);
+ *
+ *   while (true) {
+ *     bno055.update();
+ *
+ *     // BNO055のオイラー角を出力
+ *     printf("%f %f %f\r\n", bno055.get_euler_x(), bno055.get_euler_y(),
+ *            bno055.get_euler_z());
+ *
+ *     Thread::delay(10);
+ *   }
+ * }
+ * @endcode
+ */
 class BNO055 {
 public:
   BNO055(peripheral::UART &uart, uint32_t timeout = 500) : uart_{uart} {
