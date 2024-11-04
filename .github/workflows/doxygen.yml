@@ -1,0 +1,41 @@
+name: Doxygen
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  doxygen:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - run: |
+          sudo apt update
+          sudo apt install cmake graphviz
+          cd $(mktemp -d)
+          wget https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz
+          tar xvf doxygen-1.12.0.linux.bin.tar.gz
+          cd doxygen-1.12.0
+          sudo make install
+      - run: |
+          cmake -B build
+          cmake --build build --target docs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./build/html
+      - id: deployment
+        uses: actions/deploy-pages@v4
