@@ -84,10 +84,7 @@ public:
     keys_prev_ = keys_;
 
     for (size_t i = 0; i < 8; ++i) {
-      if (buf_[0] == 0x80) {
-        break;
-      }
-      if (!uart_.receive(buf_.data(), 1, 0)) {
+      if (buf_[0] == 0x80 || !uart_.receive(buf_.data(), 1, 0)) {
         break;
       }
     }
