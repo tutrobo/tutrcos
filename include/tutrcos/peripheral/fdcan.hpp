@@ -86,8 +86,6 @@ public:
     return rx_queue_.pop(msg, timeout);
   }
 
-  size_t available() override { return rx_queue_.size(); }
-
 private:
   FDCAN_HandleTypeDef *hfdcan_;
   core::Queue<CANMessage> rx_queue_;

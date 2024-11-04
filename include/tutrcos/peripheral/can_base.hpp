@@ -24,7 +24,6 @@ public:
   virtual ~CANBase() {}
   virtual bool transmit(const CANMessage &msg) = 0;
   virtual bool receive(CANMessage &msg, uint32_t timeout) = 0;
-  virtual size_t available() = 0;
 };
 
 } // namespace peripheral
