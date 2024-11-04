@@ -15,7 +15,7 @@ namespace peripheral {
 
 class FDCAN : public CANBase {
 public:
-  CAN(FDCAN_HandleTypeDef *hfdcan, size_t rx_queue_size = 64)
+  FDCAN(FDCAN_HandleTypeDef *hfdcan, size_t rx_queue_size = 64)
       : hfdcan_{hfdcan}, rx_queue_{rx_queue_size} {
     get_instances()[hfdcan_] = this;
 
@@ -92,8 +92,8 @@ private:
   FDCAN_HandleTypeDef *hfdcan_;
   core::Queue<CANMessage> rx_queue_;
 
-  static inline std::map<FDCAN_HandleTypeDef *, CAN *> &get_instances() {
-    static std::map<FDCAN_HandleTypeDef *, CAN *> instances;
+  static inline std::map<FDCAN_HandleTypeDef *, FDCAN *> &get_instances() {
+    static std::map<FDCAN_HandleTypeDef *, FDCAN *> instances;
     return instances;
   }
 

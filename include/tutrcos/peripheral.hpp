@@ -20,5 +20,5 @@
 #endif
 
 #ifdef HAL_FDCAN_MODULE_ENABLED
-#include "coperipheralre/fdcan.hpp"
+#include "peripheral/fdcan.hpp"
 #endif

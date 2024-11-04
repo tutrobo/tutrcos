@@ -6,7 +6,7 @@
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t) {
   static FDCAN_RxHeaderTypeDef rx_header;
-  static tutrclib::peripheral::CANMessage msg;
+  static tutrcos::peripheral::CANMessage msg;
 
   auto itr = tutrcos::peripheral::FDCAN::get_instances().find(hfdcan);
   if (itr != tutrcos::peripheral::FDCAN::get_instances().end()) {
@@ -21,10 +21,10 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t) {
       msg.id = rx_header.Identifier;
       switch (rx_header.IdType) {
       case FDCAN_STANDARD_ID:
-        msg.id_type = tutrclib::peripheral::CANIDType::STANDARD;
+        msg.id_type = tutrcos::peripheral::CANIDType::STANDARD;
         break;
       case FDCAN_EXTENDED_ID:
-        msg.id_type = tutrclib::peripheral::CANIDType::EXTENDED;
+        msg.id_type = tutrcos::peripheral::CANIDType::EXTENDED;
         break;
       }
       switch (rx_header.DataLength) {
@@ -57,7 +57,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t) {
         break;
       }
 
-      can->rx_queue_.push(msg, 0);
+      fdcan->rx_queue_.push(msg, 0);
     }
   }
 }
