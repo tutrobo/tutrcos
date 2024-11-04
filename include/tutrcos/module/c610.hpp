@@ -45,7 +45,6 @@ namespace module {
  * }
  * @endcode
  */
-
 class C610 {
 public:
   enum class ID {
