@@ -116,6 +116,7 @@ public:
         }
 
         buf_.fill(0);
+        return;
       }
     }
   }
