@@ -37,14 +37,13 @@ public:
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{rx_mutex_};
-    uint32_t start_time = core::Kernel::get_ticks();
+    uint32_t start = core::Kernel::get_ticks();
     while (available() < size) {
-      uint32_t elapsed = core::Kernel::get_ticks() - start_time;
-      uint32_t timeout2 = timeout - elapsed;
+      uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         break;
       }
-      rx_sem_.try_acquire(timeout2);
+      rx_sem_.try_acquire(timeout - elapsed);
     }
     if (available() < size) {
       return false;
