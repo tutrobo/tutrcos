@@ -30,9 +30,9 @@ namespace peripheral {
  *
  *   UART uart2(&huart2);
  *
- *   while (true) {
- *     uart2.enable_printf(); // UART2に対してprintf有効化
+ *   uart2.enable_printf(); // UART2に対してprintf有効化
  *
+ *   while (true) {
  *     // 7バイト送信
  *     uint8_t data[] = {'h', 'e', 'l', 'l', 'o', '\r', '\n'};
  *     uart2.transmit(data, sizeof(data));
