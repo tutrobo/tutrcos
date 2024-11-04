@@ -9,6 +9,31 @@
 namespace tutrcos {
 namespace peripheral {
 
+/**
+ * `GPIO::set_exti_callback` を使う際は、`EXTI line interrupts`
+ * を有効化する必要があります。
+ *
+ * @code{.cpp}
+ * #include <tutrcos.hpp>
+ *
+ * extern "C" void main_thread(void *) {
+ *   using namespace tutrcos::core;
+ *   using namespace tutrcos::peripheral;
+ *
+ *   GPIO led(LD2_GPIO_Port, LD2_Pin);
+ *   GPIO button(B1_GPIO_Port, B1_Pin);
+ *
+ *   button.set_exti_callback([&] {
+ *     // GPIO EXTI 割り込み
+ *   });
+ *
+ *   while (true) {
+ *     led.write(!button.read()); // ボタンを押している間LED点灯
+ *     Thread::delay(10);
+ *   }
+ * }
+ * @endcode
+ */
 class GPIO {
 public:
   GPIO(GPIO_TypeDef *port, uint16_t pin) : port_{port}, pin_{pin} {
