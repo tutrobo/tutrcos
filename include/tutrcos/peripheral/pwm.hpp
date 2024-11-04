@@ -7,6 +7,36 @@
 namespace tutrcos {
 namespace peripheral {
 
+/**
+ * Counter Period: 1000-1, PWM周波数: 1kHz に設定して動作確認しました。
+ *
+ * @code{.cpp}
+ * #include <tutrcos.hpp>
+ *
+ * extern TIM_HandleTypeDef htim2;
+ *
+ * extern "C" void main_thread(void *) {
+ *   using namespace tutrcos::core;
+ *   using namespace tutrcos::peripheral;
+ *
+ *   PWM led(&htim2, TIM_CHANNEL_1);
+ *
+ *   while (true) {
+ *     // だんだん明るく
+ *     for (int i = 0; i < 1000 - 1; ++i) {
+ *       led.set_compare(i);
+ *       Thread::delay(1);
+ *     }
+ *
+ *     // だんだん暗く
+ *     for (int i = 1000 - 1; i > 0; --i) {
+ *       led.set_compare(i);
+ *       Thread::delay(1);
+ *     }
+ *   }
+ * }
+ * @endcode
+ */
 class PWM {
 public:
   /**
