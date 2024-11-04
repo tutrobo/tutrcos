@@ -88,11 +88,6 @@ public:
     return true;
   }
 
-  size_t available() {
-    std::lock_guard lock{rx_mutex_};
-    return rx_queue_.size();
-  }
-
   void flush() {
     std::lock_guard lock{rx_mutex_};
     rx_queue_.clear();
@@ -108,6 +103,11 @@ private:
   core::Semaphore rx_sem_{1, 1};
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
+
+  size_t available() {
+    std::lock_guard lock{rx_mutex_};
+    return rx_queue_.size();
+  }
 
   static inline std::map<UART_HandleTypeDef *, UART *> &get_instances() {
     static std::map<UART_HandleTypeDef *, UART *> instances;

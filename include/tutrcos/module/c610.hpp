@@ -71,25 +71,22 @@ public:
 
   void update() {
     peripheral::CANMessage msg;
-    for (size_t i = can_.available(); i > 0; --i) {
-      if (can_.receive(msg, 0)) {
-        for (size_t i = 0; i < 8; ++i) {
-          if (msg.id == 0x201 + i) {
-            int16_t angle =
-                static_cast<int16_t>(msg.data[0] << 8 | msg.data[1]);
-            int16_t delta = angle - prev_angle_[i];
-            if (delta > 4096) {
-              delta -= 8192;
-            } else if (delta < -4096) {
-              delta += 8192;
-            }
-            position_[i] += delta;
-            prev_angle_[i] = angle;
-
-            rpm_[i] = static_cast<int16_t>(msg.data[2] << 8 | msg.data[3]);
-            current_[i] = static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
-            break;
+    while (can_.receive(msg, 0)) {
+      for (size_t i = 0; i < 8; ++i) {
+        if (msg.id == 0x201 + i) {
+          int16_t angle = static_cast<int16_t>(msg.data[0] << 8 | msg.data[1]);
+          int16_t delta = angle - prev_angle_[i];
+          if (delta > 4096) {
+            delta -= 8192;
+          } else if (delta < -4096) {
+            delta += 8192;
           }
+          position_[i] += delta;
+          prev_angle_[i] = angle;
+
+          rpm_[i] = static_cast<int16_t>(msg.data[2] << 8 | msg.data[3]);
+          current_[i] = static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
+          break;
         }
       }
     }

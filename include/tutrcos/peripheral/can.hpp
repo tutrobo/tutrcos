@@ -78,8 +78,6 @@ public:
     return rx_queue_.pop(msg, timeout);
   }
 
-  size_t available() override { return rx_queue_.size(); }
-
 private:
   CAN_HandleTypeDef *hcan_;
   core::Queue<CANMessage> rx_queue_;

@@ -83,10 +83,6 @@ public:
 
     uint8_t checksum = 0;
 
-    if (!uart_.receive(buf_.data(), buf_.size(), 0)) {
-      return;
-    }
-
     for (size_t i = 0; i < 8; ++i) {
       if (buf_[i] == 0x80) {
         if (i > 0) {
@@ -116,9 +112,15 @@ public:
           for (size_t i = 0; i < 4; ++i) {
             axes_[i] = (static_cast<float>(buf_[i + 3]) - 64) / 64;
           }
+          buf_.fill(0);
+          return;
         }
-        return;
       }
+    }
+
+    if (!uart_.receive(buf_.data(), buf_.size(), 0)) {
+
+      return;
     }
   }
 
