@@ -12,23 +12,24 @@ namespace module {
 
 /**
  * FDCAN の Classic CAN モードを用いて C610
- * と通信を行う場合は、`tutrclib::FDCAN` へのポインタを用いて構築してください。
+ * と通信を行う場合は、`tutrcos::peripheral::FDCAN` を用いて構築してください。
  *
  * @code{.cpp}
- * #include "tutrclib.h"
- * #include "tutrclib/module/c610.h"
+ * #include <tutrcos.hpp>
+ * #include <tutrcos/module/c610.hpp>
  *
- * using namespace tutrclib;
- * using namespace tutrclib::module;
- *
- * CAN can1(CAN1);
- * C610 c610;
+ * extern CAN_HandleTypeDef hcan1;
  *
  * extern "C" void main_thread(void *) {
- *   c610.init(&can1);
+ *   using namespace tutrcos::core;
+ *   using namespace tutrcos::peripheral;
+ *   using namespace tutrcos::module;
+ *
+ *   CAN can1(&hcan1);
+ *   C610 c610(can1);
  *
  *   while (true) {
- *     c610.update();  // データ送受信
+ *     c610.update(); // データ送受信
  *
  *     float Kp = 100;
  *     float v_target = 100.0f;
@@ -39,7 +40,7 @@ namespace module {
  *     // 電流値をmAで指定
  *     c610.set_current(C610::ID::ID1, Kp * error);
  *
- *     osDelay(10);
+ *     Thread::delay(10);
  *   }
  * }
  * @endcode
