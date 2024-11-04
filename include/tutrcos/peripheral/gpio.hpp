@@ -10,8 +10,8 @@ namespace tutrcos {
 namespace peripheral {
 
 /**
- * `GPIO::set_exti_callback` を使う際は、`EXTI line interrupts`
- * を有効化する必要があります。
+ * `GPIO::set_exti_callback` を使う場合は System Core -> GPIO -> NVIC -> EXTI
+ * line[x:x] interrupts` を有効化してください。
  *
  * @code{.cpp}
  * #include <tutrcos.hpp>

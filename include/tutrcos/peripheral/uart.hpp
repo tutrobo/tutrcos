@@ -15,7 +15,8 @@ namespace tutrcos {
 namespace peripheral {
 
 /**
- * UARTクラスを使う際は、`USARTx global interrupt` を有効化する必要があります。
+ * Connectivity -> USART(UART)x -> NVIC Settings -> USART(UART)x global
+ * interrupt を有効化してください。
  *
  * @code{.cpp}
  * #include <cstdio>

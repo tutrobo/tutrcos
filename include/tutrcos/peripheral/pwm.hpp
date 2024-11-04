@@ -8,7 +8,11 @@ namespace tutrcos {
 namespace peripheral {
 
 /**
- * Counter Period: 1000-1, PWM周波数: 1kHz に設定して動作確認しました。
+ * 下記サンプルコードは Counter Period: 1000-1, PWM周波数: 1kHz
+ * に設定して動作確認しています。
+ *
+ * PWM出力対応ピンからPWMを出力するためのCubeMXの設定については
+ * https://moons.link/post-632/ が参考になります。
  *
  * @code{.cpp}
  * #include <tutrcos.hpp>
