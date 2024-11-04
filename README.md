@@ -92,6 +92,16 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
 サンプルコードは各クラスのドキュメントに付属しています。
 
+`プロジェクトルート/Core/Src/main_thread.cpp` のようなファイルを作成し、`CMakeLists.txt` の `target_sources` を以下のようにして、`main_thread.cpp` 内にサンプルコードを貼り付ければ動作するはずです(もちろん、CubeMXを用いて各ペリフェラルを適切に設定し、使用するピンやIDなどは各々の環境に合わせる必要があります)。
+
+```cmake
+# Add sources to executable
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    # Add user sources here
+    Core/Src/main_thread.cpp
+)
+```
+
 ## ライセンス
 
 MIT License
