@@ -7,6 +7,36 @@
 namespace tutrcos {
 namespace peripheral {
 
+/**
+ * Timers -> TIMx -> Combined Channels を Encoder Mode にしてください。
+ *
+ * @code{.cpp}
+ * #include <cstdio>
+ * #include <tutrcos.hpp>
+ *
+ * extern UART_HandleTypeDef huart2;
+ * extern TIM_HandleTypeDef htim1;
+ *
+ * extern "C" void main_thread(void *) {
+ *   using namespace tutrcos::core;
+ *   using namespace tutrcos::peripheral;
+ *
+ *   UART uart2(&huart2);
+ *   uart2.enable_printf(); // デバッグ用printf有効化
+ *
+ *   Encoder enc(&htim1, 2048, 0.01); // PPR: 2048, 読み取り周期: 0.01s
+ *
+ *   while (true) {
+ *     enc.update();
+ *
+ *     // エンコーダの回転速度と絶対位置を出力
+ *     printf("%f %f\r\n", enc.get_rps(), enc.get_position());
+ *
+ *     Thread::delay(10);
+ *   }
+ * }
+ * @endcode
+ */
 class Encoder {
 public:
   Encoder(TIM_HandleTypeDef *htim, uint16_t ppr, float period)
