@@ -7,6 +7,8 @@
 #include "tutrcos/peripheral/uart.hpp"
 #include "tutrcos/utility.hpp"
 
+#include <cstdio>
+
 namespace tutrcos {
 namespace module {
 
@@ -81,20 +83,19 @@ public:
   void update() {
     keys_prev_ = keys_;
 
-    uint8_t checksum = 0;
-
     for (size_t i = 0; i < 8; ++i) {
-      if (buf_[i] == 0x80) {
-        if (i > 0) {
-          // 1周分受信
-          for (size_t j = i; j < 8; ++j) {
-            buf_[j - i] = buf_[j];
-          }
-          if (!uart_.receive(buf_.data() + 8 - i, i, 0)) {
-            return;
-          }
+      if (buf_[0] != 0x80) {
+        if (!uart_.receive(buf_.data(), 1, 0)) {
+          return;
+        }
+      }
+
+      if (buf_[0] == 0x80) {
+        if (!uart_.receive(buf_.data() + 1, 7, 0)) {
+          return;
         }
 
+        uint8_t checksum = 0;
         for (size_t i = 1; i < 7; ++i) {
           checksum += buf_[i];
         }
@@ -112,15 +113,10 @@ public:
           for (size_t i = 0; i < 4; ++i) {
             axes_[i] = (static_cast<float>(buf_[i + 3]) - 64) / 64;
           }
-          buf_.fill(0);
-          return;
         }
+
+        buf_.fill(0);
       }
-    }
-
-    if (!uart_.receive(buf_.data(), buf_.size(), 0)) {
-
-      return;
     }
   }
 
