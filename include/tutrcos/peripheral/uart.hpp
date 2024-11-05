@@ -64,6 +64,7 @@ public:
     std::lock_guard lock{tx_mutex_};
     tx_sem_.acquire();
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
+      tx_sem_.release();
       return false;
     }
     return true;
@@ -83,7 +84,9 @@ public:
       return false;
     }
     for (size_t i = 0; i < size; ++i) {
-      rx_queue_.pop(data[i], 0);
+      if (!rx_queue_.pop(data[i], 0)) {
+        return false;
+      }
     }
     return true;
   }
