@@ -62,26 +62,22 @@ public:
 
   bool transmit(const uint8_t *data, size_t size) {
     std::lock_guard lock{tx_mutex_};
-    tx_sem_.acquire();
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
-      tx_sem_.release();
       return false;
     }
+    tx_sem_.acquire();
     return true;
   }
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{rx_mutex_};
     uint32_t start = core::Kernel::get_ticks();
-    while (available() < size) {
+    while (rx_queue_.size() < size) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
-        break;
+        return false;
       }
       rx_sem_.try_acquire(timeout - elapsed);
-    }
-    if (available() < size) {
-      return false;
     }
     for (size_t i = 0; i < size; ++i) {
       if (!rx_queue_.pop(data[i], 0)) {
@@ -102,15 +98,10 @@ private:
   UART_HandleTypeDef *huart_;
   core::Mutex tx_mutex_;
   core::Mutex rx_mutex_;
-  core::Semaphore tx_sem_{1, 1};
-  core::Semaphore rx_sem_{1, 1};
+  core::Semaphore tx_sem_{1, 0};
+  core::Semaphore rx_sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
-
-  size_t available() {
-    std::lock_guard lock{rx_mutex_};
-    return rx_queue_.size();
-  }
 
   static inline std::map<UART_HandleTypeDef *, UART *> &get_instances() {
     static std::map<UART_HandleTypeDef *, UART *> instances;

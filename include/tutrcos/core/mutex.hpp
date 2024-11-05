@@ -20,7 +20,7 @@ private:
 public:
   Mutex() {
     osMutexAttr_t attr = {};
-    attr.attr_bits = osMutexRecursive | osMutexPrioInherit;
+    attr.attr_bits = osMutexPrioInherit;
     mutex_id_ = MutexId{osMutexNew(&attr)};
   }
 
