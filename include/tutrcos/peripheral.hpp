@@ -22,3 +22,7 @@
 #ifdef HAL_FDCAN_MODULE_ENABLED
 #include "peripheral/fdcan.hpp"
 #endif
+
+#ifdef HAL_I2C_MODULE_ENABLED
+#include "peripheral/i2c_master.hpp"
+#endif
