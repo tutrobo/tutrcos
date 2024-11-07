@@ -19,7 +19,7 @@ public:
   }
 
   bool transmit(uint16_t address, uint8_t *data, size_t size) {
-    std::lock_guard lock{tx_mutex_};
+    std::lock_guard lock{mtx_};
     if (HAL_I2C_Master_Transmit_IT(hi2c_, address << 1, data, size) != HAL_OK) {
       return false;
     }
@@ -28,7 +28,7 @@ public:
   }
 
   bool receive(uint16_t address, uint8_t *data, size_t size, uint32_t timeout) {
-    std::lock_guard lock{rx_mutex_};
+    std::lock_guard lock{mtx_};
     if (HAL_I2C_Master_Receive_IT(hi2c_, address << 1, data, size) != HAL_OK) {
       return false;
     }
@@ -38,8 +38,7 @@ public:
 
 private:
   I2C_HandleTypeDef *hi2c_;
-  core::Mutex tx_mutex_;
-  core::Mutex rx_mutex_;
+  core::Mutex mtx_;
   core::Semaphore tx_sem_{1, 0};
   core::Semaphore rx_sem_{1, 0};
 

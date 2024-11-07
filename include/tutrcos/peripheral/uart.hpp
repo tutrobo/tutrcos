@@ -61,7 +61,7 @@ public:
   ~UART() { HAL_UART_Abort(huart_); }
 
   bool transmit(const uint8_t *data, size_t size) {
-    std::lock_guard lock{tx_mutex_};
+    std::lock_guard lock{mtx_};
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
       return false;
     }
@@ -70,7 +70,7 @@ public:
   }
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
-    std::lock_guard lock{rx_mutex_};
+    std::lock_guard lock{mtx_};
     uint32_t start = core::Kernel::get_ticks();
     while (rx_queue_.size() < size) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
@@ -88,7 +88,7 @@ public:
   }
 
   void flush() {
-    std::lock_guard lock{rx_mutex_};
+    std::lock_guard lock{mtx_};
     rx_queue_.clear();
   }
 
@@ -96,8 +96,7 @@ public:
 
 private:
   UART_HandleTypeDef *huart_;
-  core::Mutex tx_mutex_;
-  core::Mutex rx_mutex_;
+  core::Mutex mtx_;
   core::Semaphore tx_sem_{1, 0};
   core::Semaphore rx_sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
