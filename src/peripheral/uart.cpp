@@ -26,17 +26,15 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
-    /*if (huart->gState != HAL_UART_STATE_READY) {
-      HAL_UART_Abort(huart);
+    if (huart->gState != HAL_UART_STATE_READY) {
+      HAL_UART_AbortTransmit(huart);
       uart->tx_sem_.release();
-      uart->rx_sem_.release();
     }
-    if (huart->RxState != HAL_UART_STATE_READY) {*/
-    HAL_UART_Abort(huart);
-    uart->tx_sem_.release();
-    uart->rx_sem_.release();
-    HAL_UART_Receive_IT(huart, &uart->rx_buf_, 1);
-    //}
+    if (huart->RxState != HAL_UART_STATE_READY) {
+      HAL_UART_AbortReceive(huart);
+      uart->rx_sem_.release();
+      HAL_UART_Receive_IT(huart, &uart->rx_buf_, 1);
+    }
   }
 }
 
