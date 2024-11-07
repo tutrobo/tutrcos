@@ -117,6 +117,8 @@ private:
   friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_AbortTransmitCpltCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_AbortReceiveCpltCallback(UART_HandleTypeDef *huart);
 };
 
 } // namespace peripheral
