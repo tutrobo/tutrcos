@@ -67,8 +67,11 @@ public:
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
       return false;
     }
-    tx_sem_.acquire();
-    return true;
+    bool res;
+    if (!tx_res_.pop(res, core::Kernel::MAX_DELAY)) {
+      return false;
+    }
+    return res;
   }
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
@@ -104,7 +107,7 @@ public:
 private:
   UART_HandleTypeDef *huart_;
   core::Mutex mtx_;
-  core::Semaphore tx_sem_{1, 0};
+  core::Queue<bool> tx_res_{1};
   core::Semaphore rx_sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
