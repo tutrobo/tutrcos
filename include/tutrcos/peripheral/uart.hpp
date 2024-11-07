@@ -4,8 +4,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <map>
 #include <mutex>
+#include <vector>
 
 #include "tutrcos/core.hpp"
 
@@ -92,7 +94,12 @@ public:
     rx_queue_.clear();
   }
 
-  void enable_printf() { get_uart_printf() = this; }
+  template <class... Args> bool printf(const char *fmt, Args... args) {
+    size_t size = std::snprintf(nullptr, 0, fmt, args...);
+    std::vector<uint8_t> buf(size + 1);
+    std::snprintf(buf.data(), size + 1, fmt, args...);
+    return transmit(buf.data(), size);
+  }
 
 private:
   UART_HandleTypeDef *huart_;
@@ -107,15 +114,9 @@ private:
     return instances;
   }
 
-  static inline UART *&get_uart_printf() {
-    static UART *uart = nullptr;
-    return uart;
-  }
-
   friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
-  friend int ::_write(int file, char *ptr, int len);
 };
 
 } // namespace peripheral
