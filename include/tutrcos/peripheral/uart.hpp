@@ -97,7 +97,7 @@ public:
   template <class... Args> bool printf(const char *fmt, Args... args) {
     size_t size = std::snprintf(nullptr, 0, fmt, args...);
     std::vector<uint8_t> buf(size + 1);
-    std::snprintf(buf.data(), size + 1, fmt, args...);
+    std::snprintf(reinterpret_cast<char *>(buf.data()), size + 1, fmt, args...);
     return transmit(buf.data(), size);
   }
 
