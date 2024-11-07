@@ -14,7 +14,6 @@ namespace module {
 
 /**
  * @code{.cpp}
- * #include <cstdio>
  * #include <tutrcos.hpp>
  * #include <tutrcos/module/ps3.hpp>
  *
@@ -36,7 +35,7 @@ namespace module {
  *
  *     // DualShock 左スティックのx, y座標を出力
  *     uart2.printf("%f %f\r\n", ps3.get_axis(PS3::Axis::LEFT_X),
- *            ps3.get_axis(PS3::Axis::LEFT_Y));
+ *                  ps3.get_axis(PS3::Axis::LEFT_Y));
  *
  *     if (ps3.get_key_down(PS3::Key::CIRCLE)) {
  *       uart2.printf("O ボタンが押されたよ\r\n");

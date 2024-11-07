@@ -21,7 +21,6 @@ namespace peripheral {
  * interrupt を有効化してください。
  *
  * @code{.cpp}
- * #include <cstdio>
  * #include <tutrcos.hpp>
  *
  * extern UART_HandleTypeDef huart2;

@@ -11,7 +11,6 @@ namespace peripheral {
  * Timers -> TIMx -> Combined Channels を Encoder Mode にしてください。
  *
  * @code{.cpp}
- * #include <cstdio>
  * #include <tutrcos.hpp>
  *
  * extern UART_HandleTypeDef huart2;

@@ -11,7 +11,6 @@ namespace module {
 
 /**
  * @code{.cpp}
- * #include <cstdio>
  * #include <tutrcos.hpp>
  * #include <tutrcos/module/bno055.hpp>
  *
@@ -33,7 +32,7 @@ namespace module {
  *
  *     // BNO055のオイラー角を出力
  *     uart2.printf("%f %f %f\r\n", bno055.get_euler_x(), bno055.get_euler_y(),
- *            bno055.get_euler_z());
+ *                  bno055.get_euler_z());
  *
  *     Thread::delay(10);
  *   }

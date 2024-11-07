@@ -15,7 +15,6 @@ namespace module {
  * と通信を行う場合は、`tutrcos::peripheral::FDCAN` を用いて構築してください。
  *
  * @code{.cpp}
- * #include <cstdio>
  * #include <tutrcos.hpp>
  * #include <tutrcos/module/c610.hpp>
  *
@@ -46,7 +45,7 @@ namespace module {
  *
  *     // M2006の回転速度と絶対位置を出力
  *     uart2.printf("%f %f\r\n", c610.get_rps(C610::ID::ID1),
- *            c610.get_position(C610::ID::ID1));
+ *                  c610.get_position(C610::ID::ID1));
  *
  *     Thread::delay(10);
  *   }
