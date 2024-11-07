@@ -29,9 +29,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
     if (huart->gState != HAL_UART_STATE_READY) {
       HAL_UART_AbortTransmit(huart);
       uart->tx_sem_.release();
+      uart->rx_sem_.release();
     }
     if (huart->RxState != HAL_UART_STATE_READY) {
       HAL_UART_AbortReceive(huart);
+      uart->tx_sem_.release();
       uart->rx_sem_.release();
       HAL_UART_Receive_IT(huart, &uart->rx_buf_, 1);
     }
