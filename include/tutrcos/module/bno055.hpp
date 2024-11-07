@@ -23,8 +23,7 @@ namespace module {
  *   using namespace tutrcos::peripheral;
  *   using namespace tutrcos::module;
  *
- *   UART uart2(&huart2);
- *   uart2.enable_printf(); // デバッグ用printf有効化
+ *   UART uart2(&huart2); // デバッグ出力用
  *
  *   UART uart3(&huart3);
  *   BNO055 bno055(uart3);
@@ -33,7 +32,7 @@ namespace module {
  *     bno055.update();
  *
  *     // BNO055のオイラー角を出力
- *     printf("%f %f %f\r\n", bno055.get_euler_x(), bno055.get_euler_y(),
+ *     uart2.printf("%f %f %f\r\n", bno055.get_euler_x(), bno055.get_euler_y(),
  *            bno055.get_euler_z());
  *
  *     Thread::delay(10);

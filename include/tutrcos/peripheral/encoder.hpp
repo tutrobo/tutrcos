@@ -21,8 +21,7 @@ namespace peripheral {
  *   using namespace tutrcos::core;
  *   using namespace tutrcos::peripheral;
  *
- *   UART uart2(&huart2);
- *   uart2.enable_printf(); // デバッグ用printf有効化
+ *   UART uart2(&huart2); // デバッグ出力用
  *
  *   Encoder enc(&htim1, 2048, 0.01); // PPR: 2048, 読み取り周期: 0.01s
  *
@@ -30,7 +29,7 @@ namespace peripheral {
  *     enc.update();
  *
  *     // エンコーダの回転速度と絶対位置を出力
- *     printf("%f %f\r\n", enc.get_rps(), enc.get_position());
+ *     uart2.printf("%f %f\r\n", enc.get_rps(), enc.get_position());
  *
  *     Thread::delay(10);
  *   }

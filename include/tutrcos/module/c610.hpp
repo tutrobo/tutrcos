@@ -27,8 +27,7 @@ namespace module {
  *   using namespace tutrcos::peripheral;
  *   using namespace tutrcos::module;
  *
- *   UART uart2(&huart2);
- *   uart2.enable_printf(); // デバッグ用printf有効化
+ *   UART uart2(&huart2); // デバッグ出力用
  *
  *   CAN can1(&hcan1);
  *   C610 c610(can1);
@@ -46,7 +45,7 @@ namespace module {
  *     c610.set_current(C610::ID::ID1, Kp * error);
  *
  *     // M2006の回転速度と絶対位置を出力
- *     printf("%f %f\r\n", c610.get_rps(C610::ID::ID1),
+ *     uart2.printf("%f %f\r\n", c610.get_rps(C610::ID::ID1),
  *            c610.get_position(C610::ID::ID1));
  *
  *     Thread::delay(10);

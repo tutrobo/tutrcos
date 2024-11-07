@@ -32,8 +32,6 @@ namespace peripheral {
  *
  *   UART uart2(&huart2);
  *
- *   uart2.enable_printf(); // UART2に対してprintf有効化
- *
  *   while (true) {
  *     // 7バイト送信
  *     uint8_t data[] = {'h', 'e', 'l', 'l', 'o', '\r', '\n'};
@@ -42,7 +40,7 @@ namespace peripheral {
  *     // 1バイト受信
  *     char c;
  *     if (uart2.receive((uint8_t *)&c, 1, Kernel::MAX_DELAY)) {
- *       printf("入力した文字: %c\r\n", c); // printfからもUART送信できる
+ *       uart2.printf("入力した文字: %c\r\n", c);
  *     }
  *
  *     Thread::delay(10);

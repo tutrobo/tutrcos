@@ -26,8 +26,7 @@ namespace module {
  *   using namespace tutrcos::peripheral;
  *   using namespace tutrcos::module;
  *
- *   UART uart2(&huart2);
- *   uart2.enable_printf(); // デバッグ用printf有効化
+ *   UART uart2(&huart2); // デバッグ出力用
  *
  *   UART uart1(&huart1);
  *   PS3 ps3(uart1);
@@ -36,15 +35,15 @@ namespace module {
  *     ps3.update();
  *
  *     // DualShock 左スティックのx, y座標を出力
- *     printf("%f %f\r\n", ps3.get_axis(PS3::Axis::LEFT_X),
+ *     uart2.printf("%f %f\r\n", ps3.get_axis(PS3::Axis::LEFT_X),
  *            ps3.get_axis(PS3::Axis::LEFT_Y));
  *
  *     if (ps3.get_key_down(PS3::Key::CIRCLE)) {
- *       printf("O ボタンが押されたよ\r\n");
+ *       uart2.printf("O ボタンが押されたよ\r\n");
  *     }
  *
  *     if (ps3.get_key_up(PS3::Key::CIRCLE)) {
- *       printf("O ボタンが離されたよ\r\n");
+ *       uart2.printf("O ボタンが離されたよ\r\n");
  *     }
  *
  *     Thread::delay(10);
