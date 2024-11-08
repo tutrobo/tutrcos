@@ -96,9 +96,12 @@ public:
 
   template <class... Args> bool printf(const char *fmt, Args... args) {
     size_t size = std::snprintf(nullptr, 0, fmt, args...);
-    std::vector<uint8_t> buf(size + 1);
-    std::snprintf(reinterpret_cast<char *>(buf.data()), size + 1, fmt, args...);
-    return transmit(buf.data(), size);
+    if (size + 1 > printf_buf_.size()) {
+      printf_buf_.resize(size + 1);
+    }
+    std::snprintf(reinterpret_cast<char *>(printf_buf_.data()), size + 1, fmt,
+                  args...);
+    return transmit(printf_buf_.data(), size);
   }
 
 private:
@@ -108,6 +111,7 @@ private:
   core::Semaphore rx_sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
+  std::vector<uint8_t> printf_buf_;
 
   static inline std::map<UART_HandleTypeDef *, UART *> &get_instances() {
     static std::map<UART_HandleTypeDef *, UART *> instances;
