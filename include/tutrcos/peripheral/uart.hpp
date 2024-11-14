@@ -100,7 +100,7 @@ public:
     }
     std::snprintf(reinterpret_cast<char *>(printf_buf_.data()), size + 1, fmt,
                   args...);
-    return transmit(printf_buf_.data(), size, 10);
+    return transmit(printf_buf_.data(), size, core::Kernel::MAX_DELAY);
   }
 
 private:
