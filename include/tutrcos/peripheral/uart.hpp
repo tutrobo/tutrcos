@@ -57,7 +57,7 @@ public:
     }
   }
 
-  ~UART() { HAL_UART_Abort_IT(huart_); }
+  ~UART() { HAL_UART_Abort(huart_); }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
@@ -65,11 +65,6 @@ public:
     while (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
-        return false;
-      }
-      if (HAL_UART_GetError(huart_) != HAL_UART_ERROR_NONE) {
-        HAL_UART_Abort_IT(huart_);
-        HAL_UART_Receive_IT(huart_, &rx_buf_, 1);
         return false;
       }
       core::Thread::delay(1);
@@ -83,11 +78,6 @@ public:
     while (rx_queue_.size() < size) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
-        return false;
-      }
-      if (HAL_UART_GetError(huart_) != HAL_UART_ERROR_NONE) {
-        HAL_UART_Abort_IT(huart_);
-        HAL_UART_Receive_IT(huart_, &rx_buf_, 1);
         return false;
       }
       core::Thread::delay(1);
@@ -126,6 +116,7 @@ private:
   }
 
   friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart);
 };
 
 } // namespace peripheral
