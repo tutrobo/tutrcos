@@ -4,7 +4,7 @@
 #include <memory>
 #include <type_traits>
 
-#include "cmsis_os2.h"
+#include <cmsis_os2.h>
 
 namespace tutrcos {
 namespace core {
