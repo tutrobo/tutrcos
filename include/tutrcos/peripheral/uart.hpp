@@ -34,7 +34,7 @@ namespace peripheral {
  *   while (true) {
  *     // 7バイト送信
  *     uint8_t data[] = {'h', 'e', 'l', 'l', 'o', '\r', '\n'};
- *     uart2.transmit(data, sizeof(data));
+ *     uart2.transmit(data, sizeof(data), Kernel::MAX_DELAY);
  *
  *     // 1バイト受信
  *     char c;
