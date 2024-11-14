@@ -15,14 +15,14 @@ void *microros_reallocate(void *pointer, size_t size, void *state);
 void *microros_zero_allocate(size_t number_of_elements, size_t size_of_element,
                              void *state);
 
-bool tutrcos_MicroROS_open_cb(uxrCustomTransport *transport);
-bool tutrcos_MicroROS_close_cb(uxrCustomTransport *transport);
-size_t tutrcos_MicroROS_write_cb(uxrCustomTransport *transport,
-                                 const uint8_t *buffer, size_t length,
-                                 uint8_t *error_code);
-size_t tutrcos_MicroROS_read_cb(uxrCustomTransport *transport, uint8_t *buffer,
-                                size_t length, int timeout,
-                                uint8_t *error_code);
+bool tutrcos_module_MicroROS_open_cb(uxrCustomTransport *transport);
+bool tutrcos_module_MicroROS_close_cb(uxrCustomTransport *transport);
+size_t tutrcos_module_MicroROS_write_cb(uxrCustomTransport *transport,
+                                        const uint8_t *buffer, size_t length,
+                                        uint8_t *error_code);
+size_t tutrcos_module_MicroROS_read_cb(uxrCustomTransport *transport,
+                                       uint8_t *buffer, size_t length,
+                                       int timeout, uint8_t *error_code);
 }
 
 namespace tutrcos {
@@ -31,10 +31,10 @@ namespace module {
 class MicroROS {
 public:
   static inline bool init(peripheral::UART &uart) {
-    if (rmw_uros_set_custom_transport(true, &uart, tutrcos_MicroROS_open_cb,
-                                      tutrcos_MicroROS_close_cb,
-                                      tutrcos_MicroROS_write_cb,
-                                      tutrcos_MicroROS_read_cb) != RMW_RET_OK) {
+    if (rmw_uros_set_custom_transport(
+            true, &uart, tutrcos_module_MicroROS_open_cb,
+            tutrcos_module_MicroROS_close_cb, tutrcos_module_MicroROS_write_cb,
+            tutrcos_module_MicroROS_read_cb) != RMW_RET_OK) {
       return false;
     }
 
@@ -47,14 +47,15 @@ public:
     return rcutils_set_default_allocator(&allocator);
   };
 
-  friend bool ::tutrcos_MicroROS_open_cb(uxrCustomTransport *transport);
-  friend bool ::tutrcos_MicroROS_close_cb(uxrCustomTransport *transport);
-  friend size_t ::tutrcos_MicroROS_write_cb(uxrCustomTransport *transport,
-                                            const uint8_t *buffer,
-                                            size_t length, uint8_t *error_code);
-  friend size_t ::tutrcos_MicroROS_read_cb(uxrCustomTransport *transport,
-                                           uint8_t *buffer, size_t length,
-                                           int timeout, uint8_t *error_code);
+  friend bool ::tutrcos_module_MicroROS_open_cb(uxrCustomTransport *transport);
+  friend bool ::tutrcos_module_MicroROS_close_cb(uxrCustomTransport *transport);
+  friend size_t ::tutrcos_module_MicroROS_write_cb(
+      uxrCustomTransport *transport, const uint8_t *buffer, size_t length,
+      uint8_t *error_code);
+  friend size_t ::tutrcos_module_MicroROS_read_cb(uxrCustomTransport *transport,
+                                                  uint8_t *buffer,
+                                                  size_t length, int timeout,
+                                                  uint8_t *error_code);
 };
 
 } // namespace module
