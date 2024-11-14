@@ -73,6 +73,7 @@ public:
 
     uint32_t tx_mailbox;
 
+    uint32_t start = core::Kernel::get_ticks();
     while (HAL_CAN_AddTxMessage(hcan_, &tx_header, msg.data.data(),
                                 &tx_mailbox) != HAL_OK) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;

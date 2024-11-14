@@ -81,6 +81,7 @@ public:
     tx_header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     tx_header.MessageMarker = 0;
 
+    uint32_t start = core::Kernel::get_ticks();
     while (HAL_FDCAN_AddMessageToTxFifoQ(hfdcan_, &tx_header,
                                          msg.data.data()) != HAL_OK) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
