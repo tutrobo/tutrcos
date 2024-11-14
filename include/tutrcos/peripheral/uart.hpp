@@ -64,8 +64,11 @@ public:
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
+    if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
+      return false;
+    }
     uint32_t start = core::Kernel::get_ticks();
-    while (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
+    while (huart_->gState != HAL_UART_STATE_READY) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         return false;
