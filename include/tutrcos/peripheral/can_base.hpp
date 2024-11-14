@@ -22,7 +22,7 @@ struct CANMessage {
 class CANBase {
 public:
   virtual ~CANBase() {}
-  virtual bool transmit(const CANMessage &msg) = 0;
+  virtual bool transmit(const CANMessage &msg, uint32_t timeout) = 0;
   virtual bool receive(CANMessage &msg, uint32_t timeout) = 0;
 };
 

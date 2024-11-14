@@ -52,7 +52,7 @@ public:
 
   ~CAN() { HAL_CAN_Stop(hcan_); }
 
-  bool transmit(const CANMessage &msg) override {
+  bool transmit(const CANMessage &msg, uint32_t timeout) override {
     CAN_TxHeaderTypeDef tx_header{};
     switch (msg.id_type) {
     case CANIDType::STANDARD:
@@ -70,6 +70,13 @@ public:
 
     uint32_t tx_mailbox;
 
+    while (HAL_CAN_GetTxMailboxesFreeLevel(hcan_) == 0) {
+      uint32_t elapsed = core::Kernel::get_ticks() - start;
+      if (elapsed >= timeout) {
+        return false;
+      }
+      core::Thread::delay(1);
+    }
     return HAL_CAN_AddTxMessage(hcan_, &tx_header, msg.data.data(),
                                 &tx_mailbox) == HAL_OK;
   }

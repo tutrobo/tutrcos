@@ -31,7 +31,7 @@ public:
 
   ~FDCAN() { HAL_FDCAN_Stop(hfdcan_); }
 
-  bool transmit(const CANMessage &msg) override {
+  bool transmit(const CANMessage &msg, uint32_t timeout) override {
     FDCAN_TxHeaderTypeDef tx_header{};
     tx_header.Identifier = msg.id;
     switch (msg.id_type) {
@@ -78,6 +78,13 @@ public:
     tx_header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     tx_header.MessageMarker = 0;
 
+    while (HAL_FDCAN_GetTxFifoFreeLevel(hfdcan_) == 0) {
+      uint32_t elapsed = core::Kernel::get_ticks() - start;
+      if (elapsed >= timeout) {
+        return false;
+      }
+      core::Thread::delay(1);
+    }
     return HAL_FDCAN_AddMessageToTxFifoQ(hfdcan_, &tx_header,
                                          msg.data.data()) == HAL_OK;
   }

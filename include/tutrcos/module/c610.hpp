@@ -96,13 +96,13 @@ public:
       msg.data[i * 2] = current_target_[i] >> 8;
       msg.data[i * 2 + 1] = current_target_[i];
     }
-    can_.transmit(msg);
+    can_.transmit(msg, 0);
     msg.id = 0x1FF;
     for (size_t i = 0; i < 4; ++i) {
       msg.data[i * 2] = current_target_[i + 4] >> 8;
       msg.data[i * 2 + 1] = current_target_[i + 4];
     }
-    can_.transmit(msg);
+    can_.transmit(msg, 0);
   }
 
   float get_rpm(ID id) { return rpm_[utility::to_underlying(id)]; }
