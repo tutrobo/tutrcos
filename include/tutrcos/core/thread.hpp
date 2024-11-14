@@ -7,7 +7,7 @@
 
 #include <cmsis_os2.h>
 
-extern "C" void tutrcos_Thread_func_impl(void *thread);
+extern "C" void tutrcos_core_Thread_func(void *thread);
 
 namespace tutrcos {
 namespace core {
@@ -26,7 +26,7 @@ public:
     osThreadAttr_t attr = {};
     attr.stack_size = STACK_SIZE;
     attr.priority = PRIORITY;
-    thread_id_ = ThreadId{osThreadNew(tutrcos_Thread_func_impl, this, &attr)};
+    thread_id_ = ThreadId{osThreadNew(tutrcos_core_Thread_func, this, &attr)};
   }
 
   static inline void yield() { osThreadYield(); }
@@ -42,7 +42,7 @@ private:
   ThreadId thread_id_;
   std::function<void()> func_;
 
-  friend void ::tutrcos_Thread_func_impl(void *thread);
+  friend void ::tutrcos_core_Thread_func(void *thread);
 };
 
 } // namespace core
