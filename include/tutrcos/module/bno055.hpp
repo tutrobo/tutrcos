@@ -85,10 +85,10 @@ private:
   bool write_reg(uint8_t addr, uint8_t *data, uint8_t size) {
     std::array<uint8_t, 4> buf{0xAA, 0x00, addr, size};
     uart_.flush();
-    if (!uart_.transmit(buf.data(), 4)) {
+    if (!uart_.transmit(buf.data(), 4, 5)) {
       return false;
     }
-    if (!uart_.transmit(data, size)) {
+    if (!uart_.transmit(data, size, 5)) {
       return false;
     }
     if (!uart_.receive(buf.data(), 2, 5)) {
@@ -100,7 +100,7 @@ private:
   bool read_reg(uint8_t addr, uint8_t *data, uint8_t size) {
     std::array<uint8_t, 4> buf{0xAA, 0x01, addr, size};
     uart_.flush();
-    if (!uart_.transmit(buf.data(), 4)) {
+    if (!uart_.transmit(buf.data(), 4, 5)) {
       return false;
     }
     if (!uart_.receive(buf.data(), 2, 5)) {

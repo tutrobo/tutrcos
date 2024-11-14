@@ -59,16 +59,24 @@ public:
 
   ~UART() { HAL_UART_Abort(huart_); }
 
-  bool transmit(const uint8_t *data, size_t size) {
+  bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
+    uint32_t start = core::Kernel::get_ticks();
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
       return false;
     }
-    bool res;
-    if (!tx_res_.pop(res, core::Kernel::MAX_DELAY)) {
-      return false;
+    while (huart_->gState != HAL_UART_STATE_READY) {
+      uint32_t elapsed = core::Kernel::get_ticks() - start;
+      if (elapsed >= timeout) {
+        return false;
+      }
+      if (HAL_UART_GetError(huart_) != HAL_UART_ERROR_NONE) {
+        HAL_UART_Abort_IT(huart_);
+        return false;
+      }
+      core::Thread::delay(1);
     }
-    return res;
+    return true;
   }
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
@@ -79,12 +87,14 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      rx_sem_.try_acquire(timeout - elapsed);
-    }
-    for (size_t i = 0; i < size; ++i) {
-      if (!rx_queue_.pop(data[i], 0)) {
+      if (HAL_UART_GetError(huart_) != HAL_UART_ERROR_NONE) {
+        HAL_UART_Abort_IT(huart_);
         return false;
       }
+      core::Thread::delay(1);
+    }
+    for (size_t i = 0; i < size; ++i) {
+      rx_queue_.pop(data[i], 0);
     }
     return true;
   }
@@ -101,14 +111,12 @@ public:
     }
     std::snprintf(reinterpret_cast<char *>(printf_buf_.data()), size + 1, fmt,
                   args...);
-    return transmit(printf_buf_.data(), size);
+    return transmit(printf_buf_.data(), size, core::Kernel::MAX_DELAY);
   }
 
 private:
   UART_HandleTypeDef *huart_;
   core::Mutex mtx_;
-  core::Queue<bool> tx_res_{1};
-  core::Semaphore rx_sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
   std::vector<uint8_t> printf_buf_;
@@ -118,11 +126,7 @@ private:
     return instances;
   }
 
-  friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
-  friend void ::HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
-  friend void ::HAL_UART_AbortTransmitCpltCallback(UART_HandleTypeDef *huart);
-  friend void ::HAL_UART_AbortReceiveCpltCallback(UART_HandleTypeDef *huart);
 };
 
 } // namespace peripheral

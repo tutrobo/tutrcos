@@ -22,7 +22,7 @@ size_t tutrcos_module_MicroROS_write_cb(uxrCustomTransport *transport,
                                         const uint8_t *buffer, size_t length,
                                         uint8_t *) {
   auto uart = reinterpret_cast<tutrcos::peripheral::UART *>(transport->args);
-  if (!uart->transmit(buffer, length)) {
+  if (!uart->transmit(buffer, length, tutrcos::core::Kernel::MAX_DELAY)) {
     return 0;
   }
   return length;
