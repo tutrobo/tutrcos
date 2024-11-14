@@ -5,7 +5,7 @@
 #include <memory>
 #include <type_traits>
 
-#include <cmsis_os2.h>
+#include "cmsis_os2.h"
 
 extern "C" void tutrcos_core_Thread_func(void *thread);
 
