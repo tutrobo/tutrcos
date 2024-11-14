@@ -57,7 +57,7 @@ public:
     }
   }
 
-  ~UART() { HAL_UART_Abort(huart_); }
+  ~UART() { HAL_UART_Abort_IT(huart_); }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
