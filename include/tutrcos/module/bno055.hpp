@@ -62,11 +62,17 @@ public:
   }
 
   void update() {
-    std::array<int16_t, 3> data;
+    std::array<int16_t, 4> data;
     if (read_reg(0x1A, reinterpret_cast<uint8_t *>(data.data()), 6)) {
       euler_x_ = data[0] / 900.0f;
       euler_y_ = data[1] / 900.0f;
       euler_z_ = data[2] / 900.0f;
+    }
+    if (read_reg(0x20, reinterpret_cast<uint8_t *>(data.data()), 8)) {
+      quat_w_ = data[0] / 16384.0f;
+      quat_x_ = data[1] / 16384.0f;
+      quat_y_ = data[2] / 16384.0f;
+      quat_z_ = data[3] / 16384.0f;
     }
   }
 
@@ -76,11 +82,24 @@ public:
 
   float get_euler_z() { return euler_z_; }
 
+  float get_quat_w() { return quat_w_; }
+
+  float get_quat_x() { return quat_x_; }
+
+  float get_quat_y() { return quat_y_; }
+
+  float get_quat_z() { return quat_z_; }
+
 private:
   peripheral::UART &uart_;
   float euler_x_ = 0;
   float euler_y_ = 0;
   float euler_z_ = 0;
+
+  float quat_w_ = 0;
+  float quat_x_ = 0;
+  float quat_y_ = 0;
+  float quat_z_ = 0;
 
   bool write_reg(uint8_t addr, uint8_t *data, uint8_t size) {
     std::array<uint8_t, 4> buf{0xAA, 0x00, addr, size};
