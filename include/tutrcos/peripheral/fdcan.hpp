@@ -29,7 +29,10 @@ public:
     }
   }
 
-  ~FDCAN() { HAL_FDCAN_Stop(hfdcan_); }
+  ~FDCAN() {
+    get_instances().erase(hfdcan_);
+    HAL_FDCAN_Stop(hfdcan_);
+  }
 
   bool transmit(const CANMessage &msg, uint32_t timeout) override {
     FDCAN_TxHeaderTypeDef tx_header{};

@@ -40,6 +40,8 @@ public:
     get_instances()[pin_] = this;
   }
 
+  ~GPIO() { get_instances().erase(pin_); }
+
   void write(bool state) {
     HAL_GPIO_WritePin(port_, pin_, static_cast<GPIO_PinState>(state));
   }

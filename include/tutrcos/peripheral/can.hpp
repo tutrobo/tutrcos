@@ -50,7 +50,10 @@ public:
     }
   }
 
-  ~CAN() { HAL_CAN_Stop(hcan_); }
+  ~CAN() {
+    get_instances().erase(hcan_);
+    HAL_CAN_Stop(hcan_);
+  }
 
   bool transmit(const CANMessage &msg, uint32_t timeout) override {
     CAN_TxHeaderTypeDef tx_header{};
