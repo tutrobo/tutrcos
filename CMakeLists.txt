@@ -10,7 +10,6 @@ target_sources(${PROJECT_NAME} INTERFACE
   src/peripheral/can.cpp
   src/peripheral/fdcan.cpp
   src/peripheral/gpio.cpp
-  src/peripheral/i2c_master.cpp
   src/peripheral/uart.cpp
 )
 

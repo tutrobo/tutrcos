@@ -16,8 +16,6 @@ class I2CMaster {
 public:
   I2CMaster(I2C_HandleTypeDef *hi2c) : hi2c_{hi2c} {}
 
-  ~I2CMaster() { HAL_I2C_Master_Abort_IT(hi2c_); }
-
   bool transmit(uint16_t address, uint8_t *data, size_t size,
                 uint32_t timeout) {
     std::lock_guard lock{mtx_};
