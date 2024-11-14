@@ -78,15 +78,15 @@ public:
     tx_header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     tx_header.MessageMarker = 0;
 
-    while (HAL_FDCAN_GetTxFifoFreeLevel(hfdcan_) == 0) {
+    while (HAL_FDCAN_AddMessageToTxFifoQ(hfdcan_, &tx_header,
+                                         msg.data.data()) != HAL_OK) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         return false;
       }
       core::Thread::delay(1);
     }
-    return HAL_FDCAN_AddMessageToTxFifoQ(hfdcan_, &tx_header,
-                                         msg.data.data()) == HAL_OK;
+    return true;
   }
 
   bool receive(CANMessage &msg, uint32_t timeout) override {
