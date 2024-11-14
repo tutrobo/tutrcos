@@ -72,6 +72,7 @@ public:
       }
       if (HAL_UART_GetError(huart_) != HAL_UART_ERROR_NONE) {
         HAL_UART_Abort_IT(huart_);
+        HAL_UART_Receive_IT(huart_, &rx_buf_, 1);
         return false;
       }
       core::Thread::delay(1);
@@ -89,6 +90,7 @@ public:
       }
       if (HAL_UART_GetError(huart_) != HAL_UART_ERROR_NONE) {
         HAL_UART_Abort_IT(huart_);
+        HAL_UART_Receive_IT(huart_, &rx_buf_, 1);
         return false;
       }
       core::Thread::delay(1);
