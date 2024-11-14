@@ -26,6 +26,10 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
+      if (HAL_I2C_GetError(hi2c_) != HAL_I2C_ERROR_NONE) {
+        HAL_I2C_Master_Abort_IT(hi2c_);
+        return false;
+      }
       core::Thread::delay(1);
     }
     return true;
@@ -38,6 +42,10 @@ public:
            HAL_OK) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
+        return false;
+      }
+      if (HAL_I2C_GetError(hi2c_) != HAL_I2C_ERROR_NONE) {
+        HAL_I2C_Master_Abort_IT(hi2c_);
         return false;
       }
       core::Thread::delay(1);
