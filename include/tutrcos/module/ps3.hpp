@@ -81,37 +81,38 @@ public:
   void update() {
     keys_prev_ = keys_;
 
-    for (size_t i = 0; i < 8; ++i) {
-      if (buf_[0] == 0x80 || !uart_.receive(buf_.data(), 1, 0)) {
-        break;
+    while (true) {
+      for (size_t i = 0; i < 8; ++i) {
+        if (buf_[0] == 0x80 || !uart_.receive(buf_.data(), 1, 0)) {
+          break;
+        }
       }
-    }
-
-    if (buf_[0] != 0x80 || !uart_.receive(buf_.data() + 1, 7, 0)) {
-      return;
-    }
-
-    uint8_t checksum = 0;
-    for (size_t i = 1; i < 7; ++i) {
-      checksum += buf_[i];
-    }
-
-    if ((checksum & 0x7F) == buf_[7]) {
-      keys_ = (buf_[1] << 8) | buf_[2];
-      if ((keys_ & 0x03) == 0x03) {
-        keys_ &= ~0x03;
-        keys_ |= 1 << 13;
+      if (buf_[0] != 0x80 || !uart_.receive(buf_.data() + 1, 7, 0)) {
+        return;
       }
-      if ((keys_ & 0x0C) == 0x0C) {
-        keys_ &= ~0x0C;
-        keys_ |= 1 << 14;
-      }
-      for (size_t i = 0; i < 4; ++i) {
-        axes_[i] = (static_cast<float>(buf_[i + 3]) - 64) / 64;
-      }
-    }
 
-    buf_.fill(0);
+      uint8_t checksum = 0;
+      for (size_t i = 1; i < 7; ++i) {
+        checksum += buf_[i];
+      }
+
+      if ((checksum & 0x7F) == buf_[7]) {
+        keys_ = (buf_[1] << 8) | buf_[2];
+        if ((keys_ & 0x03) == 0x03) {
+          keys_ &= ~0x03;
+          keys_ |= 1 << 13;
+        }
+        if ((keys_ & 0x0C) == 0x0C) {
+          keys_ &= ~0x0C;
+          keys_ |= 1 << 14;
+        }
+        for (size_t i = 0; i < 4; ++i) {
+          axes_[i] = (static_cast<float>(buf_[i + 3]) - 64) / 64;
+        }
+      }
+
+      buf_.fill(0);
+    }
   }
 
   float get_axis(Axis axis) { return axes_[utility::to_underlying(axis)]; }
