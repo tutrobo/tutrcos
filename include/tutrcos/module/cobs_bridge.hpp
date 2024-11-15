@@ -14,26 +14,31 @@
 namespace tutrcos {
 namespace module {
 
+struct COBSBridgeMessage {
+  uint8_t id;
+  uint8_t *data;
+  size_t size;
+};
+
 class COBSBridge {
 public:
   COBSBridge(peripheral::UART &uart) : uart_{uart} {}
 
-  template <class T>
-  bool transmit(uint8_t id, const T &data, uint32_t timeout) {
+  bool transmit(const COBSBridgeMessage &msg, uint32_t timeout) {
     // id(1 byte) + data(n byte) + checksum(1 byte) + delimiter(1 byte)
-    tx_buf_.resize(COBS_ENCODE_DST_BUF_LEN_MAX(sizeof(T)) + 3);
+    tx_buf_.resize(COBS_ENCODE_DST_BUF_LEN_MAX(msg.size) + 3);
     cobs_encode_result res =
-        cobs_encode(tx_buf_.data() + 1, tx_buf_.size() - 3, &data, sizeof(T));
+        cobs_encode(tx_buf_.data() + 1, tx_buf_.size() - 3, msg.data, msg.size);
     if (res.status != COBS_ENCODE_OK) {
       return false;
     }
-    tx_buf_[0] = id;
+    tx_buf_[0] = msg.id;
     tx_buf_[res.out_len + 1] = checksum(tx_buf_.data(), res.out_len + 1);
     tx_buf_[res.out_len + 2] = 0; // delimiter
     return uart_.transmit(tx_buf_.data(), res.out_len + 3, timeout);
   }
 
-  template <class T> bool receive(uint8_t &id, T &data, uint32_t timeout) {
+  bool receive(COBSBridgeMessage &msg, uint32_t timeout) {
     uint32_t start = core::Kernel::get_ticks();
     while (!read_to_end()) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
@@ -49,12 +54,13 @@ public:
       return false;
     }
     cobs_decode_result res =
-        cobs_decode(&data, sizeof(T), rx_buf_.data() + 1, rx_buf_.size() - 3);
+        cobs_decode(msg.data, msg.size, rx_buf_.data() + 1, rx_buf_.size() - 3);
     if (res.status != COBS_DECODE_OK) {
       rx_buf_.clear();
       return false;
     }
-    id = rx_buf_[0];
+    msg.id = rx_buf_[0];
+    msg.size = res.out_len;
     rx_buf_.clear();
     return true;
   }
