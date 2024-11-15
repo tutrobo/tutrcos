@@ -16,8 +16,7 @@ namespace module {
 
 struct COBSBridgeMessage {
   uint8_t id;
-  uint8_t *data;
-  size_t size;
+  std::vector<uint8_t> data;
 };
 
 class COBSBridge {
@@ -26,9 +25,9 @@ public:
 
   bool transmit(const COBSBridgeMessage &msg, uint32_t timeout) {
     // id(1 byte) + data(n byte) + checksum(1 byte) + delimiter(1 byte)
-    tx_buf_.resize(COBS_ENCODE_DST_BUF_LEN_MAX(msg.size) + 3);
-    cobs_encode_result res =
-        cobs_encode(tx_buf_.data() + 1, tx_buf_.size() - 3, msg.data, msg.size);
+    tx_buf_.resize(COBS_ENCODE_DST_BUF_LEN_MAX(msg.data.size()) + 3);
+    cobs_encode_result res = cobs_encode(tx_buf_.data() + 1, tx_buf_.size() - 3,
+                                         msg.data.data(), msg.data.size());
     if (res.status != COBS_ENCODE_OK) {
       return false;
     }
@@ -53,15 +52,17 @@ public:
       rx_buf_.clear();
       return false;
     }
+    msg.data.resize(COBS_DECODE_DST_BUF_LEN_MAX(rx_buf_.size() - 3));
     cobs_decode_result res =
-        cobs_decode(msg.data, msg.size, rx_buf_.data() + 1, rx_buf_.size() - 3);
+        cobs_decode(msg.data.data(), msg.data.size(), rx_buf_.data() + 1,
+                    rx_buf_.size() - 3);
     if (res.status != COBS_DECODE_OK) {
       rx_buf_.clear();
       return false;
     }
     msg.id = rx_buf_[0];
-    msg.size = res.out_len;
     rx_buf_.clear();
+    msg.data.resize(res.out_len);
     return true;
   }
 

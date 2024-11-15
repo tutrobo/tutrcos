@@ -101,9 +101,7 @@ public:
 
   template <class... Args> bool printf(const char *fmt, Args... args) {
     size_t size = std::snprintf(nullptr, 0, fmt, args...);
-    if (size + 1 > printf_buf_.size()) {
-      printf_buf_.resize(size + 1);
-    }
+    printf_buf_.resize(size + 1);
     std::snprintf(reinterpret_cast<char *>(printf_buf_.data()), size + 1, fmt,
                   args...);
     return transmit(printf_buf_.data(), size, core::Kernel::MAX_DELAY);
