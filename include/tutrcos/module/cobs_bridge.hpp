@@ -46,21 +46,16 @@ public:
       core::Thread::delay(1);
     }
 
-    // size_t max_decoded_size = COBS_ENCODE_DST_BUF_LEN_MAX(rx_buf_.size() -
-    // 3);
-    /* if (sizeof(T) < COBS_ENCODE_DST_BUF_LEN_MAX(rx_buf_.size())) {
-      return std::nullopt;
-    } */
     cobs_decode_result res =
         cobs_decode(&data, sizeof(T), rx_buf_.data() + 1, rx_buf_.size() - 3);
-    if (res.status != COBS_DECODE_OK) {
-      return false;
-    }
     id = rx_buf_[0];
     uint8_t chk = checksum(rx_buf_.data(), rx_buf_.size() - 2);
     rx_buf_.clear();
-    if (chk != rx_buf_[rx_buf_.size() - 2]) {
+    if (res.status != COBS_DECODE_OK) {
       return false;
+    }
+    if (chk != rx_buf_[rx_buf_.size() - 2]) {
+      // return false;
     }
     return true;
   }
