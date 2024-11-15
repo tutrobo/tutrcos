@@ -11,9 +11,13 @@ target_sources(${PROJECT_NAME} INTERFACE
   src/peripheral/fdcan.cpp
   src/peripheral/gpio.cpp
   src/peripheral/uart.cpp
+  cobs-c/cobs.c
 )
 
-target_include_directories(${PROJECT_NAME} INTERFACE include)
+target_include_directories(${PROJECT_NAME} INTERFACE
+  include
+  cobs-c
+)
 
 target_link_libraries(${PROJECT_NAME} INTERFACE "-u _printf_float")
 
