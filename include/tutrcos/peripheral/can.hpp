@@ -74,15 +74,15 @@ public:
     uint32_t tx_mailbox;
 
     uint32_t start = core::Kernel::get_ticks();
-    while (HAL_CAN_AddTxMessage(hcan_, &tx_header, msg.data.data(),
-                                &tx_mailbox) != HAL_OK) {
+    while (HAL_CAN_GetTxMailboxesFreeLevel(hcan_) == 0) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         return false;
       }
       core::Thread::delay(1);
     }
-    return true;
+    return HAL_CAN_AddTxMessage(hcan_, &tx_header, msg.data.data(),
+                                &tx_mailbox) == HAL_OK;
   }
 
   bool receive(CANMessage &msg, uint32_t timeout) override {
