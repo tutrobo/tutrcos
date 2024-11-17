@@ -28,6 +28,6 @@ if(DOXYGEN_FOUND)
   set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
   doxygen_add_docs(docs
     README.md
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
 endif()
