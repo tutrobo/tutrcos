@@ -32,6 +32,8 @@ public:
         return false;
       }
       tx_buf_.resize(res.out_len + 3);
+    } else {
+      tx_buf_.resize(3);
     }
 
     tx_buf_[0] = msg.id;
@@ -70,6 +72,8 @@ public:
         return false;
       }
       msg.data.resize(res.out_len);
+    } else {
+      msg.data.resize(0);
     }
 
     msg.id = rx_buf_[0];
