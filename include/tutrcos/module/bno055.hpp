@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 
 #include "tutrcos/core.hpp"
@@ -64,9 +65,13 @@ public:
   void update() {
     std::array<int16_t, 4> data;
     if (read_reg(0x1A, reinterpret_cast<uint8_t *>(data.data()), 6)) {
-      euler_x_ = data[0] / 900.0f;
-      euler_y_ = data[1] / 900.0f;
-      euler_z_ = data[2] / 900.0f;
+      euler_x_orig_ = data[0] / 900.0f;
+      euler_y_orig_ = data[1] / 900.0f;
+      euler_z_orig_ = data[2] / 900.0f;
+
+      euler_x_ = normalize_angle(euler_x_orig_ - euler_x_offset_);
+      euler_y_ = normalize_angle(euler_y_orig_ - euler_y_offset_);
+      euler_z_ = normalize_angle(euler_z_orig_ - euler_z_offset_);
     }
     if (read_reg(0x20, reinterpret_cast<uint8_t *>(data.data()), 8)) {
       quat_w_orig_ = data[0] / 16384.0f;
@@ -85,6 +90,19 @@ public:
     }
   }
 
+  void reset_euler() {
+    euler_x_offset_ = euler_x_orig_;
+    euler_y_offset_ = euler_y_orig_;
+    euler_z_offset_ = euler_z_orig_;
+  }
+
+  void reset_quat() {
+    quat_w_offset_ = -quat_w_orig_;
+    quat_x_offset_ = quat_x_orig_;
+    quat_y_offset_ = quat_y_orig_;
+    quat_z_offset_ = quat_z_orig_;
+  }
+
   float get_euler_x() { return euler_x_; }
 
   float get_euler_y() { return euler_y_; }
@@ -99,15 +117,17 @@ public:
 
   float get_quat_z() { return quat_z_; }
 
-  float reset_quat() {
-    quat_w_offset_ = -quat_w_orig_;
-    quat_x_offset_ = quat_x_orig_;
-    quat_y_offset_ = quat_y_orig_;
-    quat_z_offset_ = quat_z_orig_;
-  }
-
 private:
   peripheral::UART &uart_;
+
+  float euler_x_orig_ = 0;
+  float euler_y_orig_ = 0;
+  float euler_z_orig_ = 0;
+
+  float euler_x_offset_ = 0;
+  float euler_y_offset_ = 0;
+  float euler_z_offset_ = 0;
+
   float euler_x_ = 0;
   float euler_y_ = 0;
   float euler_z_ = 0;
@@ -155,6 +175,14 @@ private:
       return false;
     }
     return uart_.receive(data, size, 5);
+  }
+
+  float normalize_angle(float angle) {
+    float res = fmod(angle, 2.0f * M_PI);
+    if (res < 0) {
+      return res + 2.0f * M_PI;
+    }
+    return res;
   }
 };
 
