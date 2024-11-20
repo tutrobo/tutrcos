@@ -69,10 +69,19 @@ public:
       euler_z_ = data[2] / 900.0f;
     }
     if (read_reg(0x20, reinterpret_cast<uint8_t *>(data.data()), 8)) {
-      quat_w_ = data[0] / 16384.0f;
-      quat_x_ = data[1] / 16384.0f;
-      quat_y_ = data[2] / 16384.0f;
-      quat_z_ = data[3] / 16384.0f;
+      quat_w_orig_ = data[0] / 16384.0f;
+      quat_x_orig_ = data[1] / 16384.0f;
+      quat_y_orig_ = data[2] / 16384.0f;
+      quat_z_orig_ = data[3] / 16384.0f;
+
+      quat_w_ = quat_w_orig_ * quat_w_offset_ - quat_x_orig_ * quat_x_offset_ -
+                quat_y_orig_ * quat_y_offset_ - quat_z_orig_ * quat_z_offset_;
+      quat_x_ = quat_w_orig_ * quat_x_offset_ + quat_x_orig_ * quat_w_offset_ +
+                quat_y_orig_ * quat_z_offset_ - quat_z_orig_ * quat_y_offset_;
+      quat_y_ = quat_w_orig_ * quat_y_offset_ - quat_x_orig_ * quat_z_offset_ +
+                quat_y_orig_ * quat_w_offset_ + quat_z_orig_ * quat_x_offset_;
+      quat_z_ = quat_w_orig_ * quat_z_offset_ + quat_x_orig_ * quat_y_offset_ -
+                quat_y_orig_ * quat_x_offset_ + quat_z_orig_ * quat_w_offset_;
     }
   }
 
@@ -90,13 +99,30 @@ public:
 
   float get_quat_z() { return quat_z_; }
 
+  float reset_quat() {
+    quat_w_offset_ = -quat_w_orig_;
+    quat_x_offset_ = quat_x_orig_;
+    quat_y_offset_ = quat_y_orig_;
+    quat_z_offset_ = quat_z_orig_;
+  }
+
 private:
   peripheral::UART &uart_;
   float euler_x_ = 0;
   float euler_y_ = 0;
   float euler_z_ = 0;
 
-  float quat_w_ = 0;
+  float quat_w_orig_ = 1;
+  float quat_x_orig_ = 0;
+  float quat_y_orig_ = 0;
+  float quat_z_orig_ = 0;
+
+  float quat_w_offset_ = -1;
+  float quat_x_offset_ = 0;
+  float quat_y_offset_ = 0;
+  float quat_z_offset_ = 0;
+
+  float quat_w_ = 1;
   float quat_x_ = 0;
   float quat_y_ = 0;
   float quat_z_ = 0;
