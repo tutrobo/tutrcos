@@ -28,21 +28,35 @@ public:
   }
 
   bool update() {
-    std::array<uint8_t, 2> tx{0x00, 0x00};
-    int16_t rx;
-    if (!send_command(tx.data(), (uint8_t *)&rx, tx.size())) {
-      return false;
-    }
+    uint16_t cpr = 1 << utility::to_underlying(resolution_);
+    if (multi_turn_) {
+      std::array<uint8_t, 4> tx{0x00, 0xA0, 0x00, 0x00};
+      std::array<uint16_t, 2> rx{};
+      if (!send_command(tx.data(), reinterpret_cast<uint8_t *>(rx.data()),
+                        tx.size())) {
+        return false;
+      }
 
-    int16_t cpr = 1 << utility::to_underlying(resolution_);
-    int16_t count = rx & (cpr - 1);
-    if ((count - prev_count_) < -(cpr / 2)) {
-      rotation_++;
-    } else if ((count - prev_count_) > (cpr / 2)) {
-      rotation_--;
+      int16_t count = rx[1] & (cpr - 1);
+      int16_t rotation = rx[0] & ((1 << 14) - 1);
+      set_count(rotation * cpr + count);
+    } else {
+      std::array<uint8_t, 2> tx{0x00, 0x00};
+      uint16_t rx;
+      if (!send_command(tx.data(), reinterpret_cast<uint8_t *>(&rx),
+                        tx.size())) {
+        return false;
+      }
+
+      int16_t count = rx & (cpr - 1);
+      if ((count - prev_count_) < -(cpr / 2)) {
+        rotation_++;
+      } else if ((count - prev_count_) > (cpr / 2)) {
+        rotation_--;
+      }
+      prev_count_ = count;
+      set_count(rotation_ * cpr + count);
     }
-    prev_count_ = count;
-    set_count(rotation_ * cpr + count);
     return true;
   }
 
@@ -52,6 +66,8 @@ public:
     if (!send_command(tx.data(), rx.data(), tx.size())) {
       return false;
     }
+    prev_count_ = 0;
+    rotation_ = 0;
     set_count(0);
     return true;
   }
