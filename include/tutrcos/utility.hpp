@@ -5,12 +5,9 @@
 #include <cstdio>
 #include <type_traits>
 
-#define STRINGIFY(n) #n
-#define TOSTRING(n) STRINGIFY(n)
-
 #define TUTRCOS_ASSERT(expr, ...)                                              \
   if (!(expr)) {                                                               \
-    puts(__FILE__ ":" TOSTRING(__LINE__) ": assertion failed");                \
+    printf(__FILE__ ":%d: assertion failed\r\n", __LINE__);                    \
     Error_Handler();                                                           \
   }
 
