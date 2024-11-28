@@ -2,9 +2,8 @@
 
 #include "main.h"
 
-#include <cassert>
-#include <cmath>
-#include <vector>
+#include <array>
+#include <cstdint>
 
 #include "tutrcos/peripheral/gpio.hpp"
 #include "tutrcos/peripheral/spi.hpp"
@@ -16,124 +15,80 @@ namespace module {
 
 class AMT22 : public EncoderBase {
 public:
-  AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, uint8_t bitsize,
-        bool is_reverse = false, float reduction_ratio = 1,
-        bool singleturn = false, float cut_point = 0.5)
-      : spi_{spi}, cs_{cs}, bits_(bitsize), singleturn_(singleturn),
-        cut_point_((1 << bitsize) * cut_point), ppr_(1 << bitsize),
-        dir_((is_reverse) ? -1 : 1), reduction_ratio_(reduction_ratio),
-        offset_count_(0 / 360. * ppr_ / dir_ / reduction_ratio),
-        EncoderBase{1 << bitsize, 0.01} {
+  enum class Resolution : uint8_t {
+    _12 = 12,
+    _14 = 14,
+  };
+
+  AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, Resolution resolution,
+        bool multi_turn, float dt)
+      : EncoderBase{1 << utility::to_underlying(resolution), dt}, spi_{spi},
+        cs_{cs}, resolution_{resolution}, multi_turn_{multi_turn} {
     cs_.write(true);
   }
 
-  bool update(float dt) {
-    int32_t value;
-    uint8_t tmp_bits = 14 - bits_;
-    std::vector<char> rxdata(2);
-
-    rxdata = send({0x00, 0x00});
-
-    if (checksum(rxdata[0], rxdata[1]))
-      return 1;
-
-    raw_count_ = value =
-        ((rxdata[1] & 0x3F) << (8 - tmp_bits)) | (rxdata[0] >> tmp_bits);
-
-    if (singleturn_) {
-      if (value > cut_point_)
-        count_ = value - ppr_;
-      else
-        count_ = value;
-      // count_ = value;
-    } else {
-      if ((value - pre_value_) < -(ppr_ / 2))
-        revolution_++;
-      if ((value - pre_value_) > (ppr_ / 2))
-        revolution_--;
-      count_ = revolution_ * ppr_ + value;
+  bool update() {
+    std::array<uint8_t, 2> tx{0x00, 0x00};
+    int16_t rx;
+    if (!send_command(tx.data(), (uint8_t *)&rx, tx.size())) {
+      return false;
     }
 
-    if (dt > 0) {
-      cps_ = (count_ - pre_count_) / dt;
+    int16_t cpr = 1 << utility::to_underlying(resolution_);
+    int16_t count = rx & (cpr - 1);
+    if ((count - prev_count_) < -(cpr / 2)) {
+      rotation_++;
+    } else if ((count - prev_count_) > (cpr / 2)) {
+      rotation_--;
     }
-
-    pre_value_ = value;
-    pre_count_ = count_;
-
-    set_count(count_);
-    return 0;
+    prev_count_ = count;
+    set_count(rotation_ * cpr + count);
+    return true;
   }
 
-  void setZeroPoint() {
-    send({0x00, 0x70});
-    count_ = pre_count_ = revolution_ = pre_value_ = 0;
+  bool set_zero_point() {
+    std::array<uint8_t, 2> tx{0x00, 0x70};
+    std::array<uint8_t, 2> rx{};
+    if (!send_command(tx.data(), rx.data(), tx.size())) {
+      return false;
+    }
+    set_count(0);
+    return true;
   }
-
-  int16_t getRawCount() { return raw_count_; }
-  int32_t getCount() { return (count_ + offset_count_) * dir_; }
-  float getRotation() {
-    return static_cast<float>(getCount()) / ppr_ * reduction_ratio_;
-  }
-  float getDegree() { return getRotation() * 360.; }
-  float getRad() { return getRotation() * 2 * M_PI; }
-
-  float getCps() { return cps_ * dir_ * reduction_ratio_; }
-  float getRps() { return getCps() / ppr_; }
-  float getRpm() { return getRps() * 60; }
-  float getDegreeps() { return getRps() * 360.; }
-  float getRadps() { return getRps() * 2. * M_PI; }
-
-  int8_t getDir() { return (getCps() < 0) ? -1 : (getCps() > 0) ? 1 : 0; }
-  float getRedu() { return reduction_ratio_; }
 
 private:
   peripheral::SPI &spi_;
   peripheral::GPIO &cs_;
-  const uint16_t bits_;
-  const bool singleturn_;
-  const uint16_t cut_point_;
+  Resolution resolution_;
+  bool multi_turn_;
+  int16_t prev_count_ = 0;
+  int64_t rotation_ = 0;
 
-  bool once_flag_ = true;
-  float cps_;
-  int32_t pre_value_ = 0, raw_count_ = 0, revolution_ = 0;
-  int32_t count_ = 0, pre_count_ = 0;
-  const uint16_t ppr_;
-  const int8_t dir_;
-  const float reduction_ratio_;
-  const int32_t offset_count_;
-
-  std::vector<char> send(const std::vector<char> &data) {
-    std::vector<char> rxdata(2);
+  bool send_command(const uint8_t *tx_data, uint8_t *rx_data, size_t size) {
     cs_.write(false);
-    spi_.transmit_receive((uint8_t *)data.data(), (uint8_t *)rxdata.data(), 1,
-                          HAL_MAX_DELAY);
-    spi_.transmit_receive((uint8_t *)data.data() + 1,
-                          (uint8_t *)rxdata.data() + 1, 1, HAL_MAX_DELAY);
-    cs_.write(true);
-    std::reverse(rxdata.begin(), rxdata.end());
-    return rxdata;
-  }
-
-  bool checksum(uint8_t low_byte, uint8_t high_byte) {
-    union checkbit {
-      bool b[16];
-      uint16_t B;
-    };
-    checkbit bit_;
-    bool k0 = 0, k1 = 0;
-    for (int i = 2; i < 16; i++) {
-      if (i % 2 == 0) {
-        k1 ^= bit_.b[i];
-      } else {
-        k0 ^= bit_.b[i];
+    for (size_t i = 0; i < size; ++i) {
+      if (!spi_.transmit_receive(&tx_data[i], &rx_data[size - i - 1], 1, 5)) {
+        return false;
       }
     }
-    k0 = !k0;
-    k1 = !k1;
-
-    return (k1 == bit_.b[0]) & (k0 == bit_.b[1]);
+    cs_.write(true);
+    for (size_t i = 0; i < size; i += 2) {
+      if (!checksum(rx_data[i], rx_data[i + 1])) {
+        return false;
+      }
+    }
+    return true;
   }
+
+  bool checksum(uint8_t l, uint8_t h) {
+    bool k1 = !(bit(h, 5) ^ bit(h, 3) ^ bit(h, 1) ^ bit(l, 7) ^ bit(l, 5) ^
+                bit(l, 3) ^ bit(l, 1));
+    bool k0 = !(bit(h, 4) ^ bit(h, 2) ^ bit(h, 0) ^ bit(l, 6) ^ bit(l, 4) ^
+                bit(l, 2) ^ bit(l, 0));
+    return (k1 == bit(h, 7)) && (k0 == bit(h, 6));
+  }
+
+  bool bit(uint8_t x, uint8_t i) { return ((x >> i) & 1) == 1; }
 };
 
 } // namespace module

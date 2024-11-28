@@ -20,9 +20,10 @@ public:
   ~IncrementalEncoder() { assert(tim_.stop_encoder(TIM_CHANNEL_ALL)); }
 
   void update() {
-    int16_t cps = tim_.get_counter();
+    int16_t delta = tim_.get_counter();
     tim_.set_counter(0);
-    count_ += cps;
+    count_ += delta;
+    set_count(count_);
   }
 
 private:

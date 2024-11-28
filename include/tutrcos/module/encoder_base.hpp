@@ -14,13 +14,13 @@ public:
 
   float get_rotation() { return static_cast<float>(count_) / cpr_; }
 
-  float get_rps() { return cps_ / dt_ / cpr_; }
+  float get_rps() { return delta_ / dt_ / cpr_; }
 
   float get_rpm() { return get_rps() * 60; }
 
 protected:
-  void set_count(int16_t count) {
-    cps_ = count - count_;
+  void set_count(int64_t count) {
+    delta_ = count - count_;
     count_ = count;
   }
 
@@ -28,7 +28,7 @@ private:
   int64_t cpr_;
   float dt_;
   int64_t count_ = 0;
-  int64_t cps_ = 0;
+  int64_t delta_ = 0;
 };
 
 } // namespace module
