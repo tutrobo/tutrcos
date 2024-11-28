@@ -2,6 +2,7 @@
 
 #include "main.h"
 
+#include <cassert>
 #include <cstdint>
 
 namespace tutrcos {
@@ -39,12 +40,10 @@ class Encoder {
 public:
   Encoder(TIM_HandleTypeDef *htim, uint16_t ppr, float period)
       : htim_{htim}, ppr_{ppr}, period_{period} {
-    if (HAL_TIM_Encoder_Start(htim_, TIM_CHANNEL_ALL) != HAL_OK) {
-      Error_Handler();
-    }
+    assert(HAL_TIM_Encoder_Start(htim_, TIM_CHANNEL_ALL) == HAL_OK);
   }
 
-  ~Encoder() { HAL_TIM_Encoder_Stop(htim_, TIM_CHANNEL_ALL); }
+  ~Encoder() { assert(HAL_TIM_Encoder_Stop(htim_, TIM_CHANNEL_ALL) == HAL_OK); }
 
   void update() {
     int16_t delta = __HAL_TIM_GET_COUNTER(htim_);

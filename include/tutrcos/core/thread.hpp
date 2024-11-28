@@ -7,8 +7,6 @@
 
 #include "cmsis_os2.h"
 
-extern "C" void tutrcos_core_Thread_func(void *thread);
-
 namespace tutrcos {
 namespace core {
 
@@ -22,11 +20,13 @@ private:
       std::unique_ptr<std::remove_pointer_t<osThreadId_t>, Deleter>;
 
 public:
+  using Id = osThreadId_t;
+
   Thread(std::function<void()> &&func) : func_{std::move(func)} {
     osThreadAttr_t attr = {};
     attr.stack_size = STACK_SIZE;
     attr.priority = PRIORITY;
-    thread_id_ = ThreadId{osThreadNew(tutrcos_core_Thread_func, this, &attr)};
+    thread_id_ = ThreadId{osThreadNew(func_internal, this, &attr)};
   }
 
   static inline void yield() { osThreadYield(); }
@@ -35,6 +35,15 @@ public:
 
   static inline void delay_until(uint32_t ticks) { osDelayUntil(ticks); }
 
+  static inline Id get_id() { return osThreadGetId(); }
+
+  static inline void notify(Id id) { osThreadFlagsSet(id, 1); }
+
+  static inline bool wait(uint32_t timeout) {
+    return (osThreadFlagsWait(1, osFlagsWaitAny, timeout) & osFlagsError) ==
+           osFlagsError;
+  }
+
 private:
   static constexpr uint32_t STACK_SIZE = 4096;
   static constexpr osPriority_t PRIORITY = osPriorityNormal;
@@ -42,7 +51,9 @@ private:
   ThreadId thread_id_;
   std::function<void()> func_;
 
-  friend void ::tutrcos_core_Thread_func(void *thread);
+  static inline void func_internal(void *thread) {
+    reinterpret_cast<tutrcos::core::Thread *>(thread)->func_();
+  }
 };
 
 } // namespace core

@@ -5,11 +5,10 @@ project(tutrcos LANGUAGES CXX)
 add_library(${PROJECT_NAME} INTERFACE)
 
 target_sources(${PROJECT_NAME} INTERFACE
-  src/core/thread.cpp
-  src/module/microros.cpp
   src/peripheral/can.cpp
   src/peripheral/fdcan.cpp
   src/peripheral/gpio.cpp
+  src/peripheral/spi.cpp
   src/peripheral/uart.cpp
   cobs-c/cobs.c
 )

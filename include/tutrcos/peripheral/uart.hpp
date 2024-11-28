@@ -2,6 +2,8 @@
 
 #include "main.h"
 
+#include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -52,9 +54,7 @@ public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64)
       : huart_{huart}, rx_queue_{rx_queue_size} {
     get_instances()[huart_] = this;
-    if (HAL_UART_Receive_IT(huart_, &rx_buf_, 1) != HAL_OK) {
-      Error_Handler();
-    }
+    assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
   }
 
   ~UART() {
@@ -64,6 +64,7 @@ public:
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
+    thread_id_ = core::Thread::get_id();
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
       return false;
     }
@@ -73,7 +74,12 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      core::Thread::delay(1);
+      if (huart_->gState == HAL_UART_STATE_ERROR) {
+        assert(HAL_UART_Abort(huart_) == HAL_OK);
+        assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
+        return false;
+      }
+      core::Thread::wait(1);
     }
     return true;
   }
@@ -84,13 +90,19 @@ public:
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
+    thread_id_ = core::Thread::get_id();
     uint32_t start = core::Kernel::get_ticks();
     while (rx_queue_.size() < size) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         return false;
       }
-      core::Thread::delay(1);
+      if (huart_->gState == HAL_UART_STATE_ERROR) {
+        assert(HAL_UART_Abort(huart_) == HAL_OK);
+        assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
+        return false;
+      }
+      core::Thread::wait(1);
     }
     for (size_t i = 0; i < size; ++i) {
       rx_queue_.pop(data[i], 0);
@@ -103,6 +115,8 @@ public:
     rx_queue_.clear();
   }
 
+  void enable_stdout() { get_uart_stdout() = this; }
+
   template <class... Args> bool printf(const char *fmt, Args... args) {
     size_t size = std::snprintf(nullptr, 0, fmt, args...);
     printf_buf_.resize(size + 1);
@@ -113,6 +127,7 @@ public:
 
 private:
   UART_HandleTypeDef *huart_;
+  std::atomic<core::Thread::Id> thread_id_{nullptr};
   core::Mutex mtx_;
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
@@ -123,8 +138,15 @@ private:
     return instances;
   }
 
+  static inline UART *&get_uart_stdout() {
+    static UART *uart = nullptr;
+    return uart;
+  }
+
+  friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
-  friend void ::HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
+  friend int ::_write(int file, char *ptr, int len);
 };
 
 } // namespace peripheral
