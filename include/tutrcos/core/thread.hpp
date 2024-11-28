@@ -27,13 +27,15 @@ public:
     thread_id_ = ThreadId{osThreadNew(func_internal, this, &attr)};
   }
 
-  void notify() { osThreadFlagsSet(thread_id_.get(), 1); }
-
   static inline void yield() { osThreadYield(); }
 
   static inline void delay(uint32_t ticks) { osDelay(ticks); }
 
   static inline void delay_until(uint32_t ticks) { osDelayUntil(ticks); }
+
+  static inline osThreadId_t get_id() { return osThreadGetId(); }
+
+  static inline void notify(osThreadId_t id) { osThreadFlagsSet(id, 1); }
 
   static inline bool wait(uint32_t timeout) {
     return (osThreadFlagsWait(1, osFlagsWaitAny, timeout) & osFlagsError) ==
