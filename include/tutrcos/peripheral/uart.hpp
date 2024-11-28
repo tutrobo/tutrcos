@@ -2,6 +2,7 @@
 
 #include "main.h"
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -64,6 +65,7 @@ public:
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
+    thread_id_ = core::Thread::get_id();
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
       return false;
     }
@@ -73,20 +75,19 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      core::Thread::delay(1);
     }
     return true;
   }
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
+    thread_id_ = core::Thread::get_id();
     uint32_t start = core::Kernel::get_ticks();
     while (rx_queue_.size() < size) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         return false;
       }
-      core::Thread::delay(1);
     }
     for (size_t i = 0; i < size; ++i) {
       rx_queue_.pop(data[i], 0);
@@ -108,7 +109,7 @@ public:
   }
 
 private:
-  core::Thread::Id thread_id_;
+  std::atomic<core::Thread::Id> thread_id_{nullptr};
   UART_HandleTypeDef *huart_;
   core::Mutex mtx_;
   core::Queue<uint8_t> rx_queue_;
@@ -120,6 +121,7 @@ private:
     return instances;
   }
 
+  friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart);
 };

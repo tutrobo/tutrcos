@@ -4,11 +4,20 @@
 
 #include "tutrcos/peripheral/uart.hpp"
 
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+  auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
+  if (itr != tutrcos::peripheral::UART::get_instances().end()) {
+    auto uart = itr->second;
+    tutrcos::core::Thread::notify(uart->thread_id_);
+  }
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
     uart->rx_queue_.push(uart->rx_buf_, 0);
+    tutrcos::core::Thread::notify(uart->thread_id_);
     HAL_UART_Receive_IT(uart->huart_, &uart->rx_buf_, 1);
   }
 }
