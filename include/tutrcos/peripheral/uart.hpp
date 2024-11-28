@@ -122,8 +122,8 @@ public:
   }
 
 private:
-  std::atomic<core::Thread::Id> thread_id_{nullptr};
   UART_HandleTypeDef *huart_;
+  std::atomic<core::Thread::Id> thread_id_{nullptr};
   core::Mutex mtx_;
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;

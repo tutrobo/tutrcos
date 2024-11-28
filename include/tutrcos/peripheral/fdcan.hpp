@@ -27,7 +27,7 @@ public:
 
   ~FDCAN() {
     get_instances().erase(hfdcan_);
-    HAL_FDCAN_Stop(hfdcan_);
+    assert(HAL_FDCAN_Stop(hfdcan_) == HAL_OK);
   }
 
   bool transmit(const CANMessage &msg, uint32_t timeout) override {

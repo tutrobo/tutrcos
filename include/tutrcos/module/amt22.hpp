@@ -6,37 +6,22 @@
 #include <cmath>
 #include <vector>
 
-extern SPI_HandleTypeDef hspi2;
+#include "tutrcos/peripheral/gpio.hpp"
+#include "tutrcos/peripheral/spi.hpp"
 
-/* sample (AIO_Board)
-#include "amt22.hpp"
-#include "mbed.h"
-#include "uart485.hpp"
-
-#define SAM_TIME 0.01
-
-UnlockedSerial pc(USBTX, USBRX, 921600);
-UnlockedSPI spi(SPI1MOSI, SPI1MISO, SPI1SCK);
-Encoder *enc = new Amt22(&spi, SPI1CS1, Encoder::BitSize::_14),
-
-int main(){
-    while(true){
-        enc->update(SAM_TIME);
-        pc.printf("%f\n", enc.getDegree());
-        wait(SAM_TIME);
-    }
-}
-*/
+namespace tutrcos {
+namespace module {
 
 class AMT22 {
 public:
-  AMT22(uint8_t bitsize, bool is_reverse = false, float reduction_ratio = 1,
+  AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, uint8_t bitsize,
+        bool is_reverse = false, float reduction_ratio = 1,
         bool singleturn = false, float cut_point = 0.5)
-      : bits_(bitsize), singleturn_(singleturn),
+      : spi_{spi}, cs_{cs}, bits_(bitsize), singleturn_(singleturn),
         cut_point_((1 << bitsize) * cut_point), ppr_(1 << bitsize),
         dir_((is_reverse) ? -1 : 1), reduction_ratio_(reduction_ratio),
         offset_count_(0 / 360. * ppr_ / dir_ / reduction_ratio) {
-    HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_SET);
+    cs_.write(true);
     // spi_->format(8);
     // dout_ = 1;
     // tim_update_.start();
@@ -105,6 +90,8 @@ public:
   float getRedu() { return reduction_ratio_; }
 
 private:
+  peripheral::SPI &spi_;
+  peripheral::GPIO &cs_;
   // UnlockedSPI *spi_;
   // DigitalOut dout_;
   const uint16_t bits_;
@@ -126,10 +113,12 @@ private:
     // __disable_irq();
     // dout_ = 0;
     // wait_us(3);
-    HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_RESET);
-    HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)data.data(),
-                            (uint8_t *)rxdata.data(), 2, HAL_MAX_DELAY);
-    HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_SET);
+    cs_.write(false);
+    spi_.transmit_receive((uint8_t *)data.data(), (uint8_t *)rxdata.data(), 1,
+                          HAL_MAX_DELAY);
+    spi_.transmit_receive((uint8_t *)data.data() + 1,
+                          (uint8_t *)rxdata.data() + 1, 1, HAL_MAX_DELAY);
+    cs_.write(true);
     // for (const char c : data) {
     //  rxdata.emplace_back(spi_->write(c));
     //   wait_us(3);
@@ -160,3 +149,6 @@ private:
     return (k1 == bit_.b[0]) & (k0 == bit_.b[1]);
   }
 };
+
+} // namespace module
+} // namespace tutrcos

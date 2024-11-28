@@ -45,7 +45,7 @@ public:
 
   ~CAN() {
     get_instances().erase(hcan_);
-    HAL_CAN_Stop(hcan_);
+    assert(HAL_CAN_Stop(hcan_) == HAL_OK);
   }
 
   bool transmit(const CANMessage &msg, uint32_t timeout) override {
