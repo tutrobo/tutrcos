@@ -3,6 +3,7 @@
 #include "main.h"
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -11,7 +12,6 @@
 #include <vector>
 
 #include "tutrcos/core.hpp"
-#include "tutrcos/utility.hpp"
 
 extern "C" int _write(int file, char *ptr, int len);
 
@@ -54,7 +54,7 @@ public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64)
       : huart_{huart}, rx_queue_{rx_queue_size} {
     get_instances()[huart_] = this;
-    TUTRCOS_ASSERT(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
+    assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
   }
 
   ~UART() {
@@ -75,8 +75,8 @@ public:
         return false;
       }
       if (huart_->gState == HAL_UART_STATE_ERROR) {
-        TUTRCOS_ASSERT(HAL_UART_Abort(huart_) == HAL_OK);
-        TUTRCOS_ASSERT(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
+        assert(HAL_UART_Abort(huart_) == HAL_OK);
+        assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
         return false;
       }
       core::Thread::wait(1);
@@ -94,8 +94,8 @@ public:
         return false;
       }
       if (huart_->gState == HAL_UART_STATE_ERROR) {
-        TUTRCOS_ASSERT(HAL_UART_Abort(huart_) == HAL_OK);
-        TUTRCOS_ASSERT(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
+        assert(HAL_UART_Abort(huart_) == HAL_OK);
+        assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
         return false;
       }
       core::Thread::wait(1);

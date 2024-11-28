@@ -2,14 +2,7 @@
 
 #include "main.h"
 
-#include <cstdio>
 #include <type_traits>
-
-#define TUTRCOS_ASSERT(expr, ...)                                              \
-  if (!(expr)) {                                                               \
-    printf(__FILE__ ":%d: assertion failed\r\n", __LINE__);                    \
-    Error_Handler();                                                           \
-  }
 
 namespace tutrcos {
 namespace utility {

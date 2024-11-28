@@ -2,9 +2,8 @@
 
 #include "main.h"
 
+#include <cassert>
 #include <cstdint>
-
-#include "tutrcos/utility.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -47,10 +46,10 @@ class PWM {
 public:
   PWM(TIM_HandleTypeDef *htim, uint32_t channel)
       : htim_{htim}, channel_{channel} {
-    TUTRCOS_ASSERT(HAL_TIM_PWM_Start(htim_, channel_) == HAL_OK);
+    assert(HAL_TIM_PWM_Start(htim_, channel_) == HAL_OK);
   }
 
-  ~PWM() { TUTRCOS_ASSERT(HAL_TIM_PWM_Stop(htim_, channel_) == HAL_OK); }
+  ~PWM() { assert(HAL_TIM_PWM_Stop(htim_, channel_) == HAL_OK); }
 
   uint32_t get_compare() { return __HAL_TIM_GET_COMPARE(htim_, channel_); }
 
