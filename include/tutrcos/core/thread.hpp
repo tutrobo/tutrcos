@@ -7,8 +7,6 @@
 
 #include "cmsis_os2.h"
 
-extern "C" void tutrcos_core_Thread_func(void *thread);
-
 namespace tutrcos {
 namespace core {
 
@@ -26,14 +24,21 @@ public:
     osThreadAttr_t attr = {};
     attr.stack_size = STACK_SIZE;
     attr.priority = PRIORITY;
-    thread_id_ = ThreadId{osThreadNew(tutrcos_core_Thread_func, this, &attr)};
+    thread_id_ = ThreadId{osThreadNew(func_internal, this, &attr)};
   }
+
+  void notify() { osThreadFlagsSet(thread_id_.get(), 1); }
 
   static inline void yield() { osThreadYield(); }
 
   static inline void delay(uint32_t ticks) { osDelay(ticks); }
 
   static inline void delay_until(uint32_t ticks) { osDelayUntil(ticks); }
+
+  static inline bool wait(uint32_t timeout) {
+    return (osThreadFlagsWait(1, osFlagsWaitAny, timeout) & osFlagsError) ==
+           osFlagsError;
+  }
 
 private:
   static constexpr uint32_t STACK_SIZE = 4096;
@@ -42,7 +47,9 @@ private:
   ThreadId thread_id_;
   std::function<void()> func_;
 
-  friend void ::tutrcos_core_Thread_func(void *thread);
+  static inline void func_internal(void *thread) {
+    reinterpret_cast<tutrcos::core::Thread *>(thread)->func_();
+  }
 };
 
 } // namespace core
