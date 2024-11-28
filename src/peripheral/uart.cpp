@@ -22,6 +22,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   }
 }
 
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+  auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
+  if (itr != tutrcos::peripheral::UART::get_instances().end()) {
+    auto uart = itr->second;
+    tutrcos::core::Thread::notify(uart->thread_id_);
+  }
+}
+
 int _write(int, char *ptr, int len) {
   auto uart = tutrcos::peripheral::UART::get_uart_stdout();
   if (uart) {
