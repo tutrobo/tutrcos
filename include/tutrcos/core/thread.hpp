@@ -20,6 +20,8 @@ private:
       std::unique_ptr<std::remove_pointer_t<osThreadId_t>, Deleter>;
 
 public:
+  using Id = osThreadId_t;
+
   Thread(std::function<void()> &&func) : func_{std::move(func)} {
     osThreadAttr_t attr = {};
     attr.stack_size = STACK_SIZE;
@@ -33,9 +35,9 @@ public:
 
   static inline void delay_until(uint32_t ticks) { osDelayUntil(ticks); }
 
-  static inline osThreadId_t get_id() { return osThreadGetId(); }
+  static inline Id get_id() { return osThreadGetId(); }
 
-  static inline void notify(osThreadId_t id) { osThreadFlagsSet(id, 1); }
+  static inline void notify(Id id) { osThreadFlagsSet(id, 1); }
 
   static inline bool wait(uint32_t timeout) {
     return (osThreadFlagsWait(1, osFlagsWaitAny, timeout) & osFlagsError) ==

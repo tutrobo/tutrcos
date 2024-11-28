@@ -108,7 +108,7 @@ public:
   }
 
 private:
-  UART_HandleTypeDef *huart_;
+  core::Thread::I UART_HandleTypeDef *huart_;
   core::Mutex mtx_;
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
