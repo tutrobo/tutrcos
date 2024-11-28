@@ -9,10 +9,12 @@
 #include "tutrcos/peripheral/gpio.hpp"
 #include "tutrcos/peripheral/spi.hpp"
 
+#include "encoder_base.hpp"
+
 namespace tutrcos {
 namespace module {
 
-class AMT22 {
+class AMT22 : public EncoderBase {
 public:
   AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, uint8_t bitsize,
         bool is_reverse = false, float reduction_ratio = 1,
@@ -20,18 +22,12 @@ public:
       : spi_{spi}, cs_{cs}, bits_(bitsize), singleturn_(singleturn),
         cut_point_((1 << bitsize) * cut_point), ppr_(1 << bitsize),
         dir_((is_reverse) ? -1 : 1), reduction_ratio_(reduction_ratio),
-        offset_count_(0 / 360. * ppr_ / dir_ / reduction_ratio) {
+        offset_count_(0 / 360. * ppr_ / dir_ / reduction_ratio),
+        EncoderBase{1 << bitsize, 0.01} {
     cs_.write(true);
-    // spi_->format(8);
-    // dout_ = 1;
-    // tim_update_.start();
   }
 
-  bool update(float dt = -1) {
-    if (dt < 0) {
-      // dt = tim_update_.elapsed_time().count() / 1000000.;
-      // tim_update_.reset();
-    }
+  bool update(float dt) {
     int32_t value;
     uint8_t tmp_bits = 14 - bits_;
     std::vector<char> rxdata(2);
@@ -64,6 +60,8 @@ public:
 
     pre_value_ = value;
     pre_count_ = count_;
+
+    set_count(count_);
     return 0;
   }
 
@@ -92,13 +90,10 @@ public:
 private:
   peripheral::SPI &spi_;
   peripheral::GPIO &cs_;
-  // UnlockedSPI *spi_;
-  // DigitalOut dout_;
   const uint16_t bits_;
   const bool singleturn_;
   const uint16_t cut_point_;
 
-  // Timer tim_update_;
   bool once_flag_ = true;
   float cps_;
   int32_t pre_value_ = 0, raw_count_ = 0, revolution_ = 0;
@@ -110,21 +105,12 @@ private:
 
   std::vector<char> send(const std::vector<char> &data) {
     std::vector<char> rxdata(2);
-    // __disable_irq();
-    // dout_ = 0;
-    // wait_us(3);
     cs_.write(false);
     spi_.transmit_receive((uint8_t *)data.data(), (uint8_t *)rxdata.data(), 1,
                           HAL_MAX_DELAY);
     spi_.transmit_receive((uint8_t *)data.data() + 1,
                           (uint8_t *)rxdata.data() + 1, 1, HAL_MAX_DELAY);
     cs_.write(true);
-    // for (const char c : data) {
-    //  rxdata.emplace_back(spi_->write(c));
-    //   wait_us(3);
-    //}
-    // dout_ = 1;
-    //  __enable_irq();
     std::reverse(rxdata.begin(), rxdata.end());
     return rxdata;
   }

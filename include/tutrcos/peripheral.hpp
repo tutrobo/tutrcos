@@ -7,8 +7,7 @@
 #endif
 
 #ifdef HAL_TIM_MODULE_ENABLED
-#include "peripheral/encoder.hpp"
-#include "peripheral/pwm.hpp"
+#include "peripheral/tim.hpp"
 #endif
 
 #ifdef HAL_UART_MODULE_ENABLED
