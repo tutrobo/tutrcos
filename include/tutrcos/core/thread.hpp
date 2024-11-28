@@ -16,17 +16,15 @@ private:
     void operator()(osThreadId_t thread_id) { osThreadTerminate(thread_id); }
   };
 
-  using ThreadIdUniquePtr =
+  using ThreadId =
       std::unique_ptr<std::remove_pointer_t<osThreadId_t>, Deleter>;
 
 public:
-  using ThreadId = osThreadId_t;
-
   Thread(std::function<void()> &&func) : func_{std::move(func)} {
     osThreadAttr_t attr = {};
     attr.stack_size = STACK_SIZE;
     attr.priority = PRIORITY;
-    thread_id_ = ThreadIdUniquePtr{osThreadNew(func_internal, this, &attr)};
+    thread_id_ = ThreadId{osThreadNew(func_internal, this, &attr)};
   }
 
   static inline void yield() { osThreadYield(); }
@@ -35,9 +33,9 @@ public:
 
   static inline void delay_until(uint32_t ticks) { osDelayUntil(ticks); }
 
-  static inline ThreadId get_id() { return osThreadGetId(); }
+  static inline osThreadId_t get_id() { return osThreadGetId(); }
 
-  static inline void notify(ThreadId id) { osThreadFlagsSet(id, 1); }
+  static inline void notify(osThreadId_t id) { osThreadFlagsSet(id, 1); }
 
   static inline bool wait(uint32_t timeout) {
     return (osThreadFlagsWait(1, osFlagsWaitAny, timeout) & osFlagsError) ==
@@ -48,7 +46,7 @@ private:
   static constexpr uint32_t STACK_SIZE = 4096;
   static constexpr osPriority_t PRIORITY = osPriorityNormal;
 
-  ThreadIdUniquePtr thread_id_;
+  ThreadId thread_id_;
   std::function<void()> func_;
 
   static inline void func_internal(void *thread) {

@@ -18,13 +18,12 @@ private:
     }
   };
 
-  using QueueIdUniquePtr =
+  using QueueId =
       std::unique_ptr<std::remove_pointer_t<osMessageQueueId_t>, Deleter>;
 
 public:
   Queue(size_t capacity) {
-    queue_id_ =
-        QueueIdUniquePtr{osMessageQueueNew(capacity, sizeof(T), nullptr)};
+    queue_id_ = QueueId{osMessageQueueNew(capacity, sizeof(T), nullptr)};
   }
 
   bool push(const T &value, uint32_t timeout) {
@@ -40,7 +39,7 @@ public:
   size_t size() { return osMessageQueueGetCount(queue_id_.get()); }
 
 private:
-  QueueIdUniquePtr queue_id_;
+  QueueId queue_id_;
 };
 
 } // namespace core

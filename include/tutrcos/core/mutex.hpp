@@ -15,14 +15,13 @@ private:
     void operator()(osMutexId_t mutex_id) { osMutexDelete(mutex_id); }
   };
 
-  using MutexIdUniquePtr =
-      std::unique_ptr<std::remove_pointer_t<osMutexId_t>, Deleter>;
+  using MutexId = std::unique_ptr<std::remove_pointer_t<osMutexId_t>, Deleter>;
 
 public:
   Mutex() {
     osMutexAttr_t attr = {};
     attr.attr_bits = osMutexPrioInherit;
-    mutex_id_ = MutexIdUniquePtr{osMutexNew(&attr)};
+    mutex_id_ = MutexId{osMutexNew(&attr)};
   }
 
   bool try_lock(uint32_t timeout) {
@@ -34,7 +33,7 @@ public:
   void unlock() { osMutexRelease(mutex_id_.get()); }
 
 private:
-  MutexIdUniquePtr mutex_id_;
+  MutexId mutex_id_;
 };
 
 } // namespace core

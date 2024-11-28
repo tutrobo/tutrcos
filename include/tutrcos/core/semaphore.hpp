@@ -15,12 +15,12 @@ private:
     void operator()(osSemaphoreId_t queue_id) { osSemaphoreDelete(queue_id); }
   };
 
-  using SemaphoreIdUniquePtr =
+  using SemaphoreId =
       std::unique_ptr<std::remove_pointer_t<osSemaphoreId_t>, Deleter>;
 
 public:
   Semaphore(uint32_t max, uint32_t initial) {
-    semaphore_id_ = SemaphoreIdUniquePtr{osSemaphoreNew(max, initial, nullptr)};
+    semaphore_id_ = SemaphoreId{osSemaphoreNew(max, initial, nullptr)};
   }
 
   bool try_acquire(uint32_t timeout) {
@@ -32,7 +32,7 @@ public:
   void release() { osSemaphoreRelease(semaphore_id_.get()); }
 
 private:
-  SemaphoreIdUniquePtr semaphore_id_;
+  SemaphoreId semaphore_id_;
 };
 
 } // namespace core
