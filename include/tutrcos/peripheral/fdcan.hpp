@@ -7,6 +7,7 @@
 #include <map>
 
 #include "tutrcos/core.hpp"
+#include "tutrcos/utility.hpp"
 
 #include "can_base.hpp"
 
@@ -19,14 +20,9 @@ public:
       : hfdcan_{hfdcan}, rx_queue_{rx_queue_size} {
     get_instances()[hfdcan_] = this;
 
-    if (HAL_FDCAN_ActivateNotification(hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE,
-                                       0) != HAL_OK) {
-      Error_Handler();
-    }
-
-    if (HAL_FDCAN_Start(hfdcan_) != HAL_OK) {
-      Error_Handler();
-    }
+    TUTRCOS_ASSERT(HAL_FDCAN_ActivateNotification(
+                       hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_FDCAN_Start(hfdcan_) == HAL_OK);
   }
 
   ~FDCAN() {

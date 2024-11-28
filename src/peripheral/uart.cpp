@@ -22,16 +22,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   }
 }
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-  HAL_UART_Abort_IT(huart);
-}
-
-void HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart) {
-  auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
-  if (itr != tutrcos::peripheral::UART::get_instances().end()) {
-    auto uart = itr->second;
-    HAL_UART_Receive_IT(uart->huart_, &uart->rx_buf_, 1);
+int _write(int, char *ptr, int len) {
+  auto uart = tutrcos::peripheral::UART::get_uart_stdout();
+  if (uart) {
+    uart->transmit(reinterpret_cast<uint8_t *>(ptr), len,
+                   tutrcos::core::Kernel::MAX_DELAY);
+    return len;
   }
+  return -1;
 }
 
 #endif

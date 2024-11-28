@@ -1,6 +1,18 @@
 #pragma once
 
+#include "main.h"
+
+#include <cstdio>
 #include <type_traits>
+
+#define STRINGIFY(n) #n
+#define TOSTRING(n) STRINGIFY(n)
+
+#define TUTRCOS_ASSERT(expr, ...)                                              \
+  if (!(expr)) {                                                               \
+    puts(__FILE__ ":" TOSTRING(__LINE__) ": assertion failed");                \
+    Error_Handler();                                                           \
+  }
 
 namespace tutrcos {
 namespace utility {
