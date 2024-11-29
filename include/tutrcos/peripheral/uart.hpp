@@ -2,7 +2,6 @@
 
 #include "main.h"
 
-#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -52,9 +51,10 @@ namespace peripheral {
 class UART {
 public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64)
-      : huart_{huart}, rx_queue_{rx_queue_size} {
+      : huart_{huart}, rx_queue_{rx_queue_size}, rx_buf_(rx_queue_size) {
     get_instances()[huart_] = this;
-    assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
+    assert(HAL_UARTEx_ReceiveToIdle_IT(huart_, rx_buf_.data(),
+                                       rx_buf_.size()) == HAL_OK);
   }
 
   ~UART() {
@@ -110,7 +110,7 @@ private:
   core::Mutex mtx_;
   core::Semaphore sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
-  uint8_t rx_buf_;
+  std::vector<uint8_t> rx_buf_;
 
   static inline std::map<UART_HandleTypeDef *, UART *> &get_instances() {
     static std::map<UART_HandleTypeDef *, UART *> instances;
@@ -123,7 +123,8 @@ private:
   }
 
   friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
-  friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,
+                                           uint16_t Size);
   friend void ::HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
   friend int ::_write(int file, char *ptr, int len);
 };

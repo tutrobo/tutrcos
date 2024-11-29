@@ -12,13 +12,16 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
   }
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
   auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
-    uart->rx_queue_.push(uart->rx_buf_, 0);
+    for (uint16_t i = 0; i < Size; ++i) {
+      uart->rx_queue_.push(uart->rx_buf_[i], 0);
+    }
     uart->sem_.release();
-    assert(HAL_UART_Receive_IT(huart, &uart->rx_buf_, 1) == HAL_OK);
+    assert(HAL_UARTEx_ReceiveToIdle_IT(huart, uart->rx_buf_.data(),
+                                       uart->rx_buf_.size()) == HAL_OK);
   }
 }
 
@@ -28,7 +31,8 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
     auto uart = itr->second;
     assert(HAL_UART_Abort(huart) == HAL_OK);
     uart->sem_.release();
-    assert(HAL_UART_Receive_IT(huart, &uart->rx_buf_, 1) == HAL_OK);
+    assert(HAL_UARTEx_ReceiveToIdle_IT(huart, uart->rx_buf_.data(),
+                                       uart->rx_buf_.size()) == HAL_OK);
   }
 }
 
