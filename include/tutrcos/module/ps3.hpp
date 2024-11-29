@@ -14,6 +14,7 @@ namespace module {
 
 /**
  * @code{.cpp}
+ * #include <cstdio>
  * #include <tutrcos.hpp>
  * #include <tutrcos/module/ps3.hpp>
  *
@@ -26,6 +27,7 @@ namespace module {
  *   using namespace tutrcos::module;
  *
  *   UART uart2(&huart2); // デバッグ出力用
+ *   uart2.enable_stdout();
  *
  *   UART uart1(&huart1);
  *   PS3 ps3(uart1);
@@ -34,15 +36,15 @@ namespace module {
  *     ps3.update();
  *
  *     // DualShock 左スティックのx, y座標を出力
- *     uart2.printf("%f %f\r\n", ps3.get_axis(PS3::Axis::LEFT_X),
- *                  ps3.get_axis(PS3::Axis::LEFT_Y));
+ *     printf("%f %f\r\n", ps3.get_axis(PS3::Axis::LEFT_X),
+ *            ps3.get_axis(PS3::Axis::LEFT_Y));
  *
  *     if (ps3.get_key_down(PS3::Key::CIRCLE)) {
- *       uart2.printf("O ボタンが押されたよ\r\n");
+ *       printf("O ボタンが押されたよ\r\n");
  *     }
  *
  *     if (ps3.get_key_up(PS3::Key::CIRCLE)) {
- *       uart2.printf("O ボタンが離されたよ\r\n");
+ *       printf("O ボタンが離されたよ\r\n");
  *     }
  *
  *     Thread::delay(10);

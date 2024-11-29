@@ -12,6 +12,7 @@ namespace module {
 
 /**
  * @code{.cpp}
+ * #include <cstdio>
  * #include <tutrcos.hpp>
  * #include <tutrcos/module/bno055.hpp>
  *
@@ -24,6 +25,7 @@ namespace module {
  *   using namespace tutrcos::module;
  *
  *   UART uart2(&huart2); // デバッグ出力用
+ *   uart2.enable_stdout();
  *
  *   UART uart3(&huart3);
  *   BNO055 bno055(uart3);
@@ -32,8 +34,8 @@ namespace module {
  *     bno055.update();
  *
  *     // BNO055のオイラー角を出力
- *     uart2.printf("%f %f %f\r\n", bno055.get_euler_x(), bno055.get_euler_y(),
- *                  bno055.get_euler_z());
+ *     printf("%f %f %f\r\n", bno055.get_euler_x(), bno055.get_euler_y(),
+ *            bno055.get_euler_z());
  *
  *     Thread::delay(10);
  *   }
