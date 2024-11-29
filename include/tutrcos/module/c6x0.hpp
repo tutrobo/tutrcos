@@ -17,8 +17,9 @@ namespace module {
  * と通信を行う場合は、`tutrcos::peripheral::FDCAN` を用いて構築してください。
  *
  * @code{.cpp}
+ * #include <cstdio>
  * #include <tutrcos.hpp>
- * #include <tutrcos/module/c610.hpp>
+ * #include <tutrcos/module/c6x0.hpp>
  *
  * extern UART_HandleTypeDef huart2;
  * extern CAN_HandleTypeDef hcan1;
@@ -29,9 +30,11 @@ namespace module {
  *   using namespace tutrcos::module;
  *
  *   UART uart2(&huart2); // デバッグ出力用
+ *   uart2.enable_stdout();
  *
  *   CAN can1(&hcan1);
- *   C610 c610(can1);
+ *   C6x0 c610(can1, C6x0::Type::C610);
+ *   C6x0::Motor &m2006 = c610.get_motor(C6x0::ID::_1);
  *
  *   while (true) {
  *     c610.update(); // データ送受信
@@ -39,15 +42,14 @@ namespace module {
  *     float Kp = 100;
  *     float v_target = 100.0f;
  *     // 現在の速度をrpsで取得
- *     float v_actual = c610.get_rps(C610::ID::ID1);
+ *     float v_actual = m2006.get_rps();
  *     float error = v_target - v_actual;
  *
  *     // 電流値をmAで指定
- *     c610.set_current(C610::ID::ID1, Kp * error);
+ *     m2006.set_current(Kp * error);
  *
  *     // M2006の回転速度と絶対位置を出力
- *     uart2.printf("%f %f\r\n", c610.get_rps(C610::ID::ID1),
- *                  c610.get_position(C610::ID::ID1));
+ *     printf("%f %f\r\n", m2006.get_rps(), m2006.get_rotation());
  *
  *     Thread::delay(10);
  *   }
@@ -74,6 +76,11 @@ public:
 
   class Motor : public EncoderBase {
   public:
+    Motor(const Motor &) = delete;
+    Motor &operator=(const Motor &) = delete;
+    Motor(Motor &&) = delete;
+    Motor &operator=(Motor &&) = delete;
+
     float get_rps() override { return get_rpm() / 60; }
 
     float get_rpm() override { return rpm_; }
@@ -89,11 +96,6 @@ public:
     int16_t current_target_ = 0;
 
     Motor() : EncoderBase{8192} {}
-
-    Motor(const Motor &) = delete;
-    Motor &operator=(const Motor &) = delete;
-    Motor(Motor &&) = delete;
-    Motor &operator=(Motor &&) = delete;
 
     friend class C6x0;
   };
