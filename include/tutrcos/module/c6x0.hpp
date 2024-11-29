@@ -100,7 +100,7 @@ public:
 
   C6x0(peripheral::CANBase &can, Type type) : can_{can}, type_{type} {}
 
-  void update() {
+  bool update() {
     peripheral::CANMessage msg;
     while (can_.receive(msg, 0)) {
       for (size_t i = 0; i < 8; ++i) {
@@ -133,6 +133,7 @@ public:
       }
     }
 
+    bool res = true;
     msg.id_type = peripheral::CANIDType::STANDARD;
     msg.id = 0x200;
     msg.dlc = 8;
@@ -149,7 +150,9 @@ public:
       msg.data[i * 2] = current_target >> 8;
       msg.data[i * 2 + 1] = current_target;
     }
-    can_.transmit(msg, 0);
+    if (!can_.transmit(msg, 0)) {
+      res = false;
+    }
     msg.id = 0x1FF;
     for (size_t i = 0; i < 4; ++i) {
       int16_t current_target;
@@ -164,7 +167,10 @@ public:
       msg.data[i * 2] = current_target >> 8;
       msg.data[i * 2 + 1] = current_target;
     }
-    can_.transmit(msg, 0);
+    if (!can_.transmit(msg, 0)) {
+      res = false;
+    }
+    return res;
   }
 
   Motor &get_motor(ID id) { return motors_[utility::to_underlying(id)]; }
