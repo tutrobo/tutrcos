@@ -11,8 +11,8 @@ class EncoderBase {
 public:
   EncoderBase(int64_t cpr) : cpr_{cpr} {}
   virtual ~EncoderBase() {}
-  int64_t get_count() { return count_; }
-  float get_rotation() { return static_cast<float>(count_) / cpr_; }
+  virtual int64_t get_count() { return count_; }
+  virtual float get_rotation() { return static_cast<float>(count_) / cpr_; }
   virtual float get_rps() { return delta_ / dt_ / cpr_; }
   virtual float get_rpm() { return get_rps() * 60; }
 
