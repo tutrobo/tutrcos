@@ -12,7 +12,7 @@ namespace module {
 
 class IncrementalEncoder : public EncoderBase {
 public:
-  IncrementalEncoder(peripheral::TIM &tim, int16_t ppr, float dt)
+  IncrementalEncoder(peripheral::TIM &tim, int16_t ppr)
       : EncoderBase{ppr * 4}, tim_{tim} {
     assert(tim_.start_encoder(TIM_CHANNEL_ALL));
   }

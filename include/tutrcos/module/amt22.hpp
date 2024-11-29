@@ -20,27 +20,22 @@ public:
     _14 = 14,
   };
 
+  enum class Type {
+    SINGLE_TURN,
+    MULTI_TURN,
+  };
+
   AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, Resolution resolution,
-        bool multi_turn)
+        Type type)
       : EncoderBase{1 << utility::to_underlying(resolution)}, spi_{spi},
-        cs_{cs}, resolution_{resolution}, multi_turn_{multi_turn} {
+        cs_{cs}, resolution_{resolution}, type_{type} {
     cs_.write(true);
   }
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
-    if (multi_turn_) {
-      std::array<uint8_t, 4> tx{0x00, 0xA0, 0x00, 0x00};
-      std::array<uint16_t, 2> rx{};
-      if (!send_command(tx.data(), reinterpret_cast<uint8_t *>(rx.data()),
-                        tx.size())) {
-        return false;
-      }
-
-      int16_t count = rx[1] & (cpr - 1);
-      int16_t rotation = rx[0] & ((1 << 14) - 1);
-      set_count(rotation * cpr + count);
-    } else {
+    switch (type_) {
+    case Type::SINGLE_TURN: {
       std::array<uint8_t, 2> tx{0x00, 0x00};
       uint16_t rx;
       if (!send_command(tx.data(), reinterpret_cast<uint8_t *>(&rx),
@@ -57,6 +52,21 @@ public:
       }
       set_count(get_count() + delta);
       prev_count_ = count;
+      break;
+    }
+    case Type::MULTI_TURN: {
+      std::array<uint8_t, 4> tx{0x00, 0xA0, 0x00, 0x00};
+      std::array<uint16_t, 2> rx{};
+      if (!send_command(tx.data(), reinterpret_cast<uint8_t *>(rx.data()),
+                        tx.size())) {
+        return false;
+      }
+
+      int16_t count = rx[1] & (cpr - 1);
+      int16_t rotation = rx[0] & ((1 << 14) - 1);
+      set_count(rotation * cpr + count);
+      break;
+    }
     }
     return true;
   }
@@ -76,7 +86,7 @@ private:
   peripheral::SPI &spi_;
   peripheral::GPIO &cs_;
   Resolution resolution_;
-  bool multi_turn_;
+  Type type_;
   int16_t prev_count_ = 0;
 
   bool send_command(const uint8_t *tx_data, uint8_t *rx_data, size_t size) {

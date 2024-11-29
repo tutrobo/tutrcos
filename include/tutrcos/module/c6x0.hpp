@@ -122,13 +122,10 @@ public:
               static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
           switch (type_) {
           case Type::C610:
-            motors_[i].current_ =
-                static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
+            motors_[i].current_ = current;
             break;
           case Type::C620:
-            motors_[i].current_ =
-                static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]) * 25000 /
-                16384;
+            motors_[i].current_ = current * 25000 / 16384;
             break;
           }
           break;
