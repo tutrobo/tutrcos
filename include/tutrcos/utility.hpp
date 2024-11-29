@@ -1,10 +1,18 @@
 #pragma once
 
+#include <cassert>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <vector>
 
 #include "cobs.h"
+
+#ifdef NDEBUG
+#define TUTRCOS_ASSERT(expr) (expr)
+#else
+#define TUTRCOS_ASSERT(expr) assert((expr))
+#endif
 
 namespace tutrcos {
 namespace utility {
@@ -21,7 +29,8 @@ template <class... Args> std::string format(const char *fmt, Args... args) {
   return buf;
 }
 
-bool cobs_encode(const std::vector<uint8_t> &src, std::vector<uint8_t> &dest) {
+inline bool cobs_encode(const std::vector<uint8_t> &src,
+                        std::vector<uint8_t> &dest) {
   dest.resize(COBS_ENCODE_DST_BUF_LEN_MAX(src.size()));
   cobs_encode_result res =
       ::cobs_encode(dest.data(), dest.size(), src.data(), src.size());
@@ -32,7 +41,8 @@ bool cobs_encode(const std::vector<uint8_t> &src, std::vector<uint8_t> &dest) {
   return true;
 }
 
-bool cobs_decode(const std::vector<uint8_t> &src, std::vector<uint8_t> &dest) {
+inline bool cobs_decode(const std::vector<uint8_t> &src,
+                        std::vector<uint8_t> &dest) {
   dest.resize(COBS_DECODE_DST_BUF_LEN_MAX(src.size()));
   cobs_decode_result res =
       ::cobs_decode(dest.data(), dest.size(), src.data(), src.size());

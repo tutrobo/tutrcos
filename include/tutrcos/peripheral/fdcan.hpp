@@ -2,12 +2,12 @@
 
 #include "main.h"
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <map>
 
 #include "tutrcos/core.hpp"
+#include "tutrcos/utility.hpp"
 
 #include "can_base.hpp"
 
@@ -20,14 +20,14 @@ public:
       : hfdcan_{hfdcan}, rx_queue_{rx_queue_size} {
     get_instances()[hfdcan_] = this;
 
-    assert(HAL_FDCAN_ActivateNotification(
-               hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) == HAL_OK);
-    assert(HAL_FDCAN_Start(hfdcan_) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_FDCAN_ActivateNotification(
+                       hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_FDCAN_Start(hfdcan_) == HAL_OK);
   }
 
   ~FDCAN() {
     get_instances().erase(hfdcan_);
-    assert(HAL_FDCAN_Stop(hfdcan_) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_FDCAN_Stop(hfdcan_) == HAL_OK);
   }
 
   bool transmit(const CANMessage &msg, uint32_t timeout) override {

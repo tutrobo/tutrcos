@@ -2,12 +2,12 @@
 
 #include "main.h"
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <map>
 
 #include "tutrcos/core.hpp"
+#include "tutrcos/utility.hpp"
 
 #include "can_base.hpp"
 
@@ -37,15 +37,15 @@ public:
     filter.FilterActivation = ENABLE;
     filter.SlaveStartFilterBank = 14;
 
-    assert(HAL_CAN_ConfigFilter(hcan_, &filter) == HAL_OK);
-    assert(HAL_CAN_ActivateNotification(hcan_, CAN_IT_RX_FIFO0_MSG_PENDING) ==
-           HAL_OK);
-    assert(HAL_CAN_Start(hcan_) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_CAN_ConfigFilter(hcan_, &filter) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_CAN_ActivateNotification(
+                       hcan_, CAN_IT_RX_FIFO0_MSG_PENDING) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_CAN_Start(hcan_) == HAL_OK);
   }
 
   ~CAN() {
     get_instances().erase(hcan_);
-    assert(HAL_CAN_Stop(hcan_) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_CAN_Stop(hcan_) == HAL_OK);
   }
 
   bool transmit(const CANMessage &msg, uint32_t timeout) override {

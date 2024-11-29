@@ -2,7 +2,6 @@
 
 #include "main.h"
 
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -11,6 +10,7 @@
 #include <vector>
 
 #include "tutrcos/core.hpp"
+#include "tutrcos/utility.hpp"
 
 extern "C" int _write(int file, char *ptr, int len);
 
@@ -53,13 +53,13 @@ public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64)
       : huart_{huart}, rx_queue_{rx_queue_size}, rx_buf_(rx_queue_size) {
     get_instances()[huart_] = this;
-    assert(HAL_UARTEx_ReceiveToIdle_IT(huart_, rx_buf_.data(),
-                                       rx_buf_.size()) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_UARTEx_ReceiveToIdle_IT(huart_, rx_buf_.data(),
+                                               rx_buf_.size()) == HAL_OK);
   }
 
   ~UART() {
     get_instances().erase(huart_);
-    assert(HAL_UART_Abort(huart_) == HAL_OK);
+    TUTRCOS_ASSERT(HAL_UART_Abort(huart_) == HAL_OK);
   }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cassert>
 #include <cstdint>
 
 #include "tutrcos/peripheral/tim.hpp"
+#include "tutrcos/utility.hpp"
 
 #include "encoder_base.hpp"
 
@@ -14,10 +14,10 @@ class IncrementalEncoder : public EncoderBase {
 public:
   IncrementalEncoder(peripheral::TIM &tim, int16_t ppr)
       : EncoderBase{ppr * 4}, tim_{tim} {
-    assert(tim_.start_encoder(TIM_CHANNEL_ALL));
+    TUTRCOS_ASSERT(tim_.start_encoder(TIM_CHANNEL_ALL));
   }
 
-  ~IncrementalEncoder() { assert(tim_.stop_encoder(TIM_CHANNEL_ALL)); }
+  ~IncrementalEncoder() { TUTRCOS_ASSERT(tim_.stop_encoder(TIM_CHANNEL_ALL)); }
 
   void update() {
     int16_t delta = tim_.get_counter();
