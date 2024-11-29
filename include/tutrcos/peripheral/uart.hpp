@@ -111,7 +111,6 @@ private:
   core::Semaphore sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
-  std::vector<uint8_t> printf_buf_;
 
   static inline std::map<UART_HandleTypeDef *, UART *> &get_instances() {
     static std::map<UART_HandleTypeDef *, UART *> instances;
