@@ -84,7 +84,7 @@ public:
     return true;
   }
 
-  bool transmit(const std::vector<uint8_t>& data, uint32_t timeout) {
+  bool transmit(const std::vector<uint8_t> &data, uint32_t timeout) {
     return transmit(data.data(), data.size(), timeout);
   }
 
@@ -116,14 +116,6 @@ public:
   }
 
   void enable_stdout() { get_uart_stdout() = this; }
-
-  template <class... Args> bool printf(const char *fmt, Args... args) {
-    size_t size = std::snprintf(nullptr, 0, fmt, args...);
-    printf_buf_.resize(size + 1);
-    std::snprintf(reinterpret_cast<char *>(printf_buf_.data()), size + 1, fmt,
-                  args...);
-    return transmit(printf_buf_.data(), size, core::Kernel::MAX_DELAY);
-  }
 
 private:
   UART_HandleTypeDef *huart_;
