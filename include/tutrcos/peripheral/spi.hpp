@@ -2,7 +2,6 @@
 
 #include "main.h"
 
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -21,7 +20,6 @@ public:
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
-    thread_id_ = core::Thread::get_id();
     if (HAL_SPI_Transmit_IT(hspi_, data, size) != HAL_OK) {
       return false;
     }
@@ -31,14 +29,13 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      core::Thread::wait(1);
+      sem_.try_acquire(1);
     }
     return true;
   }
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
-    thread_id_ = core::Thread::get_id();
     if (HAL_SPI_Receive_IT(hspi_, data, size) != HAL_OK) {
       return false;
     }
@@ -48,7 +45,7 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      core::Thread::wait(1);
+      sem_.try_acquire(1);
     }
     return true;
   }
@@ -56,7 +53,6 @@ public:
   bool transmit_receive(const uint8_t *tx_data, uint8_t *rx_data, size_t size,
                         uint32_t timeout) {
     std::lock_guard lock{mtx_};
-    thread_id_ = core::Thread::get_id();
     if (HAL_SPI_TransmitReceive_IT(hspi_, tx_data, rx_data, size) != HAL_OK) {
       return false;
     }
@@ -66,15 +62,15 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      core::Thread::wait(1);
+      sem_.try_acquire(1);
     }
     return true;
   }
 
 private:
   SPI_HandleTypeDef *hspi_;
-  std::atomic<core::Thread::Id> thread_id_{nullptr};
   core::Mutex mtx_;
+  core::Semaphore sem_{1, 0};
 
   static inline std::map<SPI_HandleTypeDef *, SPI *> &get_instances() {
     static std::map<SPI_HandleTypeDef *, SPI *> instances;

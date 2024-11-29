@@ -92,7 +92,7 @@ private:
   }
 
   bool send_extended_command(uint8_t command) {
-    std::array<uint8_t, 2> data{address_ | 0x02, command};
+    std::array<uint8_t, 2> data{static_cast<uint8_t>(address_ | 0x02), command};
     de_.write(true);
     if (!uart_.transmit(data.data(), data.size(), 1)) {
       return false;

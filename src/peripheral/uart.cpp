@@ -8,7 +8,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
   auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
-    tutrcos::core::Thread::notify(uart->thread_id_);
+    uart->sem_.release();
   }
 }
 
@@ -17,8 +17,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
     uart->rx_queue_.push(uart->rx_buf_, 0);
-    tutrcos::core::Thread::notify(uart->thread_id_);
-    HAL_UART_Receive_IT(uart->huart_, &uart->rx_buf_, 1);
+    uart->sem_.release();
+    assert(HAL_UART_Receive_IT(huart, &uart->rx_buf_, 1) == HAL_OK);
   }
 }
 
@@ -26,7 +26,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
-    tutrcos::core::Thread::notify(uart->thread_id_);
+    assert(HAL_UART_Abort(huart) == HAL_OK);
+    uart->sem_.release();
+    assert(HAL_UART_Receive_IT(huart, &uart->rx_buf_, 1) == HAL_OK);
   }
 }
 

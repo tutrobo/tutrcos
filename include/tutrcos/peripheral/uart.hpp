@@ -59,12 +59,11 @@ public:
 
   ~UART() {
     get_instances().erase(huart_);
-    HAL_UART_Abort_IT(huart_);
+    assert(HAL_UART_Abort(huart_) == HAL_OK);
   }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
-    thread_id_ = core::Thread::get_id();
     if (HAL_UART_Transmit_IT(huart_, data, size) != HAL_OK) {
       return false;
     }
@@ -74,12 +73,7 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      if (huart_->gState == HAL_UART_STATE_ERROR) {
-        assert(HAL_UART_Abort(huart_) == HAL_OK);
-        assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
-        return false;
-      }
-      core::Thread::wait(1);
+      sem_.try_acquire(1);
     }
     return true;
   }
@@ -90,19 +84,13 @@ public:
 
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
-    thread_id_ = core::Thread::get_id();
     uint32_t start = core::Kernel::get_ticks();
     while (rx_queue_.size() < size) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         return false;
       }
-      if (huart_->gState == HAL_UART_STATE_ERROR) {
-        assert(HAL_UART_Abort(huart_) == HAL_OK);
-        assert(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
-        return false;
-      }
-      core::Thread::wait(1);
+      sem_.try_acquire(1);
     }
     for (size_t i = 0; i < size; ++i) {
       rx_queue_.pop(data[i], 0);
@@ -119,8 +107,8 @@ public:
 
 private:
   UART_HandleTypeDef *huart_;
-  std::atomic<core::Thread::Id> thread_id_{nullptr};
   core::Mutex mtx_;
+  core::Semaphore sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
   uint8_t rx_buf_;
   std::vector<uint8_t> printf_buf_;
