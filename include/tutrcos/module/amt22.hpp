@@ -91,7 +91,7 @@ private:
   bool send_command(const uint8_t *command, uint8_t *response, size_t size) {
     cs_.write(false);
     for (size_t i = 0; i < size; ++i) {
-      if (!spi_.transmit_receive(&command[i], &response[size - i - 1], 1, 5)) {
+      if (!spi_.transmit_receive(&command[i], &response[size - i - 1], 1, 1)) {
         return false;
       }
     }
