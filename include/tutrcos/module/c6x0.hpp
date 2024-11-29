@@ -61,15 +61,15 @@ public:
     C620,
   };
 
-  enum class ID {
-    ID1,
-    ID2,
-    ID3,
-    ID4,
-    ID5,
-    ID6,
-    ID7,
-    ID8,
+  enum class Id {
+    _1,
+    _2,
+    _3,
+    _4,
+    _5,
+    _6,
+    _7,
+    _8,
   };
 
   class Motor : public EncoderBase {
@@ -134,7 +134,7 @@ public:
     }
 
     bool res = true;
-    msg.id_type = peripheral::CANIDType::STANDARD;
+    msg.id_type = peripheral::CANIdType::STANDARD;
     msg.id = 0x200;
     msg.dlc = 8;
     for (size_t i = 0; i < 4; ++i) {
@@ -173,7 +173,7 @@ public:
     return res;
   }
 
-  Motor &get_motor(ID id) { return motors_[utility::to_underlying(id)]; }
+  Motor &get_motor(Id id) { return motors_[utility::to_underlying(id)]; }
 
 private:
   peripheral::CANBase &can_;
