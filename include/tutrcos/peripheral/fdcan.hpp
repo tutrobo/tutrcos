@@ -34,10 +34,10 @@ public:
     FDCAN_TxHeaderTypeDef tx_header{};
     tx_header.Identifier = msg.id;
     switch (msg.id_type) {
-    case CANIdType::STANDARD:
+    case CANIDType::STANDARD:
       tx_header.IdType = FDCAN_STANDARD_ID;
       break;
-    case CANIdType::EXTENDED:
+    case CANIDType::EXTENDED:
       tx_header.IdType = FDCAN_EXTENDED_ID;
       break;
     }

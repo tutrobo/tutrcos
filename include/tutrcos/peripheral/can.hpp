@@ -51,11 +51,11 @@ public:
   bool transmit(const CANMessage &msg, uint32_t timeout) override {
     CAN_TxHeaderTypeDef tx_header{};
     switch (msg.id_type) {
-    case CANIdType::STANDARD:
+    case CANIDType::STANDARD:
       tx_header.StdId = msg.id;
       tx_header.IDE = CAN_ID_STD;
       break;
-    case CANIdType::EXTENDED:
+    case CANIDType::EXTENDED:
       tx_header.ExtId = msg.id;
       tx_header.IDE = CAN_ID_EXT;
       break;

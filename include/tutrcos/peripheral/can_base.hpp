@@ -7,13 +7,13 @@
 namespace tutrcos {
 namespace peripheral {
 
-enum class CANIdType {
+enum class CANIDType {
   STANDARD,
   EXTENDED,
 };
 
 struct CANMessage {
-  CANIdType id_type;
+  CANIDType id_type;
   uint32_t id;
   uint8_t dlc;
   std::array<uint8_t, 8> data;

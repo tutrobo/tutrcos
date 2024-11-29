@@ -20,11 +20,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
       switch (rx_header.IDE) {
       case CAN_ID_STD:
-        msg.id_type = tutrcos::peripheral::CANIdType::STANDARD;
+        msg.id_type = tutrcos::peripheral::CANIDType::STANDARD;
         msg.id = rx_header.StdId;
         break;
       case CAN_ID_EXT:
-        msg.id_type = tutrcos::peripheral::CANIdType::EXTENDED;
+        msg.id_type = tutrcos::peripheral::CANIDType::EXTENDED;
         msg.id = rx_header.ExtId;
         break;
       }
