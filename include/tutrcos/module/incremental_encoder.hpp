@@ -14,10 +14,10 @@ class IncrementalEncoder : public EncoderBase {
 public:
   IncrementalEncoder(peripheral::TIM &tim, int16_t ppr)
       : EncoderBase{ppr * 4}, tim_{tim} {
-    TUTRCOS_ASSERT(tim_.start_encoder(TIM_CHANNEL_ALL));
+    TUTRCOS_VERIFY(tim_.start_encoder(TIM_CHANNEL_ALL));
   }
 
-  ~IncrementalEncoder() { TUTRCOS_ASSERT(tim_.stop_encoder(TIM_CHANNEL_ALL)); }
+  ~IncrementalEncoder() { TUTRCOS_VERIFY(tim_.stop_encoder(TIM_CHANNEL_ALL)); }
 
   void update() {
     int16_t delta = tim_.get_counter();

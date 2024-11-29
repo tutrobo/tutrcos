@@ -9,9 +9,9 @@
 #include "cobs.h"
 
 #ifdef NDEBUG
-#define TUTRCOS_ASSERT(expr) (expr)
+#define TUTRCOS_VERIFY(expr) (expr)
 #else
-#define TUTRCOS_ASSERT(expr) assert((expr))
+#define TUTRCOS_VERIFY(expr) assert((expr))
 #endif
 
 namespace tutrcos {

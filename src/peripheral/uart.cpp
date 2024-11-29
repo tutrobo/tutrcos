@@ -25,7 +25,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
       uart->rx_queue_.push(uart->rx_buf_[i], 0);
     }
     uart->sem_.release();
-    TUTRCOS_ASSERT(HAL_UARTEx_ReceiveToIdle_IT(huart, uart->rx_buf_.data(),
+    TUTRCOS_VERIFY(HAL_UARTEx_ReceiveToIdle_IT(huart, uart->rx_buf_.data(),
                                                uart->rx_buf_.size()) == HAL_OK);
   }
   printf("%d %d\r\n", (int)tim->get_counter(), (int)Size);
@@ -35,9 +35,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
-    TUTRCOS_ASSERT(HAL_UART_Abort(huart) == HAL_OK);
+    TUTRCOS_VERIFY(HAL_UART_Abort(huart) == HAL_OK);
     uart->sem_.release();
-    TUTRCOS_ASSERT(HAL_UARTEx_ReceiveToIdle_IT(huart, uart->rx_buf_.data(),
+    TUTRCOS_VERIFY(HAL_UARTEx_ReceiveToIdle_IT(huart, uart->rx_buf_.data(),
                                                uart->rx_buf_.size()) == HAL_OK);
   }
 }
