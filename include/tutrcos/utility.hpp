@@ -1,9 +1,10 @@
 #pragma once
 
-#include "main.h"
-
 #include <string>
 #include <type_traits>
+#include <vector>
+
+#include "cobs.h"
 
 namespace tutrcos {
 namespace utility {
@@ -18,6 +19,29 @@ template <class... Args> std::string format(const char *fmt, Args... args) {
   std::string buf(size, '\0');
   std::snprintf(buf.data(), size + 1, fmt, args...);
   return buf;
+}
+
+bool cobs_encode(const std::vector<uint8_t> &src, std::vector<uint8_t> &dest) {
+  dest.resize(COBS_ENCODE_DST_BUF_LEN_MAX(src.size()));
+  cobs_encode_result res =
+      ::cobs_encode(dest.data(), dest.size(), src.data(), src.size());
+  if (res.status != COBS_ENCODE_OK) {
+    return false;
+  }
+  dest.resize(res.out_len);
+  return true;
+}
+
+bool cobs_decode(const std::vector<uint8_t> &src, std::vector<uint8_t> &dest) {
+  dest.resize(COBS_DECODE_DST_BUF_LEN_MAX(src.size()));
+  cobs_decode_result res =
+      ::cobs_decode(dest.data(), dest.size(), src.data(), src.size());
+  if (res.status != COBS_DECODE_OK &&
+      res.status != COBS_DECODE_ZERO_BYTE_IN_INPUT) {
+    return false;
+  }
+  dest.resize(res.out_len);
+  return true;
 }
 
 } // namespace utility
