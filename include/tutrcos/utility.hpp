@@ -9,7 +9,7 @@
 #include "cobs.h"
 
 #ifdef NDEBUG
-#define TUTRCOS_VERIFY(expr) (expr)
+#define TUTRCOS_VERIFY(expr) ((void)(expr))
 #else
 #define TUTRCOS_VERIFY(expr) assert((expr))
 #endif
