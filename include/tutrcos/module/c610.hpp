@@ -7,6 +7,8 @@
 #include "tutrcos/peripheral/can_base.hpp"
 #include "tutrcos/utility.hpp"
 
+#include "encoder_base.hpp"
+
 namespace tutrcos {
 namespace module {
 
@@ -52,8 +54,13 @@ namespace module {
  * }
  * @endcode
  */
-class C610 {
+class C6x0 {
 public:
+  enum class Type {
+    C610,
+    C620,
+  };
+
   enum class ID {
     ID1,
     ID2,
@@ -65,25 +72,65 @@ public:
     ID8,
   };
 
-  C610(peripheral::CANBase &can) : can_{can} {}
+  class Motor : public EncoderBase {
+  public:
+    float get_rps() override { return get_rpm() / 60; }
+
+    float get_rpm() override { return rpm_; }
+
+    int16_t get_current() { return current_; }
+
+    void set_current(int16_t current) { current_target_ = current; }
+
+  private:
+    int16_t prev_count_ = 0;
+    int16_t rpm_ = 0;
+    int16_t current_ = 0;
+    int16_t current_target_ = 0;
+
+    Motor() : EncoderBase{8192} {}
+
+    Motor(const Motor &) = delete;
+    Motor &operator=(const Motor &) = delete;
+    Motor(Motor &&) = delete;
+    Motor &operator=(Motor &&) = delete;
+
+    friend class C6x0;
+  };
+
+  C6x0(peripheral::CANBase &can, Type type) : can_{can}, type_{type} {}
 
   void update() {
     peripheral::CANMessage msg;
     while (can_.receive(msg, 0)) {
       for (size_t i = 0; i < 8; ++i) {
         if (msg.id == 0x201 + i) {
-          int16_t angle = static_cast<int16_t>(msg.data[0] << 8 | msg.data[1]);
-          int16_t delta = angle - prev_angle_[i];
+          int16_t count = static_cast<int16_t>(msg.data[0] << 8 | msg.data[1]);
+          int16_t delta = count - motors_[i].prev_count_;
           if (delta > 4096) {
             delta -= 8192;
           } else if (delta < -4096) {
             delta += 8192;
           }
-          position_[i] += delta;
-          prev_angle_[i] = angle;
+          motors_[i].set_count(motors_[i].get_count() + delta);
+          motors_[i].prev_count_ = count;
 
-          rpm_[i] = static_cast<int16_t>(msg.data[2] << 8 | msg.data[3]);
-          current_[i] = static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
+          motors_[i].rpm_ =
+              static_cast<int16_t>(msg.data[2] << 8 | msg.data[3]);
+
+          int16_t current =
+              static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
+          switch (type_) {
+          case Type::C610:
+            motors_[i].current_ =
+                static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
+            break;
+          case Type::C620:
+            motors_[i].current_ =
+                static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]) * 25000 /
+                16384;
+            break;
+          }
           break;
         }
       }
@@ -93,45 +140,42 @@ public:
     msg.id = 0x200;
     msg.dlc = 8;
     for (size_t i = 0; i < 4; ++i) {
-      msg.data[i * 2] = current_target_[i] >> 8;
-      msg.data[i * 2 + 1] = current_target_[i];
+      int16_t current_target;
+      switch (type_) {
+      case Type::C610:
+        current_target = motors_[i].current_target_;
+        break;
+      case Type::C620:
+        current_target = motors_[i].current_target_ * 16384 / 25000;
+        break;
+      }
+      msg.data[i * 2] = current_target >> 8;
+      msg.data[i * 2 + 1] = current_target;
     }
     can_.transmit(msg, 0);
     msg.id = 0x1FF;
     for (size_t i = 0; i < 4; ++i) {
-      msg.data[i * 2] = current_target_[i + 4] >> 8;
-      msg.data[i * 2 + 1] = current_target_[i + 4];
+      int16_t current_target;
+      switch (type_) {
+      case Type::C610:
+        current_target = motors_[i + 4].current_target_;
+        break;
+      case Type::C620:
+        current_target = motors_[i + 4].current_target_ * 16384 / 25000;
+        break;
+      }
+      msg.data[i * 2] = current_target >> 8;
+      msg.data[i * 2 + 1] = current_target;
     }
     can_.transmit(msg, 0);
   }
 
-  float get_rpm(ID id) { return rpm_[utility::to_underlying(id)]; }
-
-  float get_rps(ID id) { return get_rpm(id) / 60.0f; }
-
-  float get_position(ID id) {
-    return position_[utility::to_underlying(id)] / 8192.0f;
-  }
-
-  void set_position(ID id, float position) {
-    position_[utility::to_underlying(id)] = position * 8192;
-  }
-
-  // -10000 ~ 10000 mA
-  int16_t get_current(ID id) { return current_[utility::to_underlying(id)]; }
-
-  void set_current(ID id, int16_t current) {
-    current_target_[utility::to_underlying(id)] = current;
-  }
+  Motor &get_motor(ID id) { return motors_[utility::to_underlying(id)]; }
 
 private:
   peripheral::CANBase &can_;
-
-  std::array<int16_t, 8> prev_angle_ = {};
-  std::array<int64_t, 8> position_ = {};
-  std::array<int16_t, 8> rpm_ = {};
-  std::array<int16_t, 8> current_ = {};
-  std::array<int16_t, 8> current_target_ = {};
+  Type type_;
+  std::array<Motor, 8> motors_ = {};
 };
 
 } // namespace module

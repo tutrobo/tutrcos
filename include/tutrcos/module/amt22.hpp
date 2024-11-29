@@ -21,8 +21,8 @@ public:
   };
 
   AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, Resolution resolution,
-        bool multi_turn, float dt)
-      : EncoderBase{1 << utility::to_underlying(resolution), dt}, spi_{spi},
+        bool multi_turn)
+      : EncoderBase{1 << utility::to_underlying(resolution)}, spi_{spi},
         cs_{cs}, resolution_{resolution}, multi_turn_{multi_turn} {
     cs_.write(true);
   }
@@ -49,13 +49,14 @@ public:
       }
 
       int16_t count = rx & (cpr - 1);
-      if ((count - prev_count_) < -(cpr / 2)) {
-        rotation_++;
-      } else if ((count - prev_count_) > (cpr / 2)) {
-        rotation_--;
+      int16_t delta = count - prev_count_;
+      if (delta > (cpr / 2)) {
+        delta -= cpr;
+      } else if (delta < -(cpr / 2)) {
+        delta += cpr;
       }
+      set_count(get_count() + delta);
       prev_count_ = count;
-      set_count(rotation_ * cpr + count);
     }
     return true;
   }
@@ -67,7 +68,6 @@ public:
       return false;
     }
     prev_count_ = 0;
-    rotation_ = 0;
     set_count(0);
     return true;
   }
@@ -78,7 +78,6 @@ private:
   Resolution resolution_;
   bool multi_turn_;
   int16_t prev_count_ = 0;
-  int64_t rotation_ = 0;
 
   bool send_command(const uint8_t *tx_data, uint8_t *rx_data, size_t size) {
     cs_.write(false);
