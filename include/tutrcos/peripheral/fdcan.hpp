@@ -30,14 +30,14 @@ public:
     TUTRCOS_VERIFY(HAL_FDCAN_Stop(hfdcan_) == HAL_OK);
   }
 
-  bool transmit(const CANMessage &msg, uint32_t timeout) override {
+  bool transmit(const Message &msg, uint32_t timeout) override {
     FDCAN_TxHeaderTypeDef tx_header{};
     tx_header.Identifier = msg.id;
     switch (msg.id_type) {
-    case CANIDType::STANDARD:
+    case IDType::STANDARD:
       tx_header.IdType = FDCAN_STANDARD_ID;
       break;
-    case CANIDType::EXTENDED:
+    case IDType::EXTENDED:
       tx_header.IdType = FDCAN_EXTENDED_ID;
       break;
     }
@@ -89,13 +89,13 @@ public:
                                          msg.data.data()) == HAL_OK;
   }
 
-  bool receive(CANMessage &msg, uint32_t timeout) override {
+  bool receive(Message &msg, uint32_t timeout) override {
     return rx_queue_.pop(msg, timeout);
   }
 
 private:
   FDCAN_HandleTypeDef *hfdcan_;
-  core::Queue<CANMessage> rx_queue_;
+  core::Queue<Message> rx_queue_;
 
   static inline std::map<FDCAN_HandleTypeDef *, FDCAN *> &get_instances() {
     static std::map<FDCAN_HandleTypeDef *, FDCAN *> instances;

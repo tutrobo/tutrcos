@@ -48,14 +48,14 @@ public:
     TUTRCOS_VERIFY(HAL_CAN_Stop(hcan_) == HAL_OK);
   }
 
-  bool transmit(const CANMessage &msg, uint32_t timeout) override {
+  bool transmit(const Message &msg, uint32_t timeout) override {
     CAN_TxHeaderTypeDef tx_header{};
     switch (msg.id_type) {
-    case CANIDType::STANDARD:
+    case IDType::STANDARD:
       tx_header.StdId = msg.id;
       tx_header.IDE = CAN_ID_STD;
       break;
-    case CANIDType::EXTENDED:
+    case IDType::EXTENDED:
       tx_header.ExtId = msg.id;
       tx_header.IDE = CAN_ID_EXT;
       break;
@@ -78,13 +78,13 @@ public:
                                 &tx_mailbox) == HAL_OK;
   }
 
-  bool receive(CANMessage &msg, uint32_t timeout) override {
+  bool receive(Message &msg, uint32_t timeout) override {
     return rx_queue_.pop(msg, timeout);
   }
 
 private:
   CAN_HandleTypeDef *hcan_;
-  core::Queue<CANMessage> rx_queue_;
+  core::Queue<Message> rx_queue_;
 
   static inline std::map<CAN_HandleTypeDef *, CAN *> &get_instances() {
     static std::map<CAN_HandleTypeDef *, CAN *> instances;

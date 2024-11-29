@@ -6,7 +6,7 @@
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
   static CAN_RxHeaderTypeDef rx_header;
-  static tutrcos::peripheral::CANMessage msg;
+  static tutrcos::peripheral::CANBase::Message msg;
 
   auto itr = tutrcos::peripheral::CAN::get_instances().find(hcan);
   if (itr != tutrcos::peripheral::CAN::get_instances().end()) {
@@ -20,11 +20,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
       switch (rx_header.IDE) {
       case CAN_ID_STD:
-        msg.id_type = tutrcos::peripheral::CANIDType::STANDARD;
+        msg.id_type = tutrcos::peripheral::CANBase::IDType::STANDARD;
         msg.id = rx_header.StdId;
         break;
       case CAN_ID_EXT:
-        msg.id_type = tutrcos::peripheral::CANIDType::EXTENDED;
+        msg.id_type = tutrcos::peripheral::CANBase::IDType::EXTENDED;
         msg.id = rx_header.ExtId;
         break;
       }

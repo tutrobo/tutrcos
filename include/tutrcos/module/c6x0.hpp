@@ -103,7 +103,7 @@ public:
   C6x0(peripheral::CANBase &can, Type type) : can_{can}, type_{type} {}
 
   bool update() {
-    peripheral::CANMessage msg;
+    peripheral::CANBase::Message msg;
     while (can_.receive(msg, 0)) {
       for (size_t i = 0; i < 8; ++i) {
         if (msg.id == 0x201 + i) {
@@ -136,7 +136,7 @@ public:
     }
 
     bool res = true;
-    msg.id_type = peripheral::CANIDType::STANDARD;
+    msg.id_type = peripheral::CANBase::IDType::STANDARD;
     msg.id = 0x200;
     msg.dlc = 8;
     for (size_t i = 0; i < 4; ++i) {
