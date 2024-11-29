@@ -25,7 +25,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   auto itr = tutrcos::peripheral::UART::get_instances().find(huart);
   if (itr != tutrcos::peripheral::UART::get_instances().end()) {
     auto uart = itr->second;
+    __disable_irq();
     TUTRCOS_VERIFY(HAL_UART_Abort(huart) == HAL_OK);
+    uart->rx_head_ = 0;
+    uart->rx_tail_ = 0;
+    __enable_irq();
     uart->sem_.release();
     TUTRCOS_VERIFY(HAL_UARTEx_ReceiveToIdle_DMA(huart, uart->rx_buf_.data(),
                                                 uart->rx_buf_.size()) ==
