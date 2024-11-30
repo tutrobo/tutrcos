@@ -3,12 +3,11 @@
 #include <array>
 #include <cstddef>
 #include <functional>
-#include <optional>
 
 namespace tutrcos {
-namespace core {
+namespace peripheral {
 
-template <class K, class V, size_t N> class FixedHashMap {
+template <class K, class V, size_t N> class InstanceTable {
 private:
   struct Entry {
     enum class State {
@@ -17,26 +16,26 @@ private:
       ERASED,
     };
 
-    std::optional<K> key;
-    std::optional<V> value;
+    K key;
+    V *value;
     State state = State::EMPTY;
   };
 
 public:
-  std::optional<V> get(const K &key) {
+  V *get(const K &key) {
     for (size_t i = 0; i < N; ++i) {
       Entry &entry = entries_[hash(key, i)];
       if (entry.state == Entry::State::EMPTY) {
-        return std::nullopt;
+        return nullptr;
       }
       if (entry.state == Entry::State::OCCUPIED && entry.key == key) {
         return entry.value;
       }
     }
-    return std::nullopt;
+    return nullptr;
   }
 
-  bool set(const K &key, const V &value) {
+  bool set(const K &key, V *value) {
     for (size_t i = 0; i < N; ++i) {
       Entry &entry = entries_[hash(key, i)];
       if (entry.state != Entry::State::OCCUPIED) {
@@ -60,8 +59,6 @@ public:
         return false;
       }
       if (entry.state == Entry::State::OCCUPIED && entry.key == key) {
-        entry.key = std::nullopt;
-        entry.value = std::nullopt;
         entry.state = Entry::State::ERASED;
         return true;
       }
@@ -77,5 +74,5 @@ private:
   }
 };
 
-} // namespace core
+} // namespace peripheral
 } // namespace tutrcos

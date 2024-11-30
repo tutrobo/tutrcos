@@ -2,15 +2,15 @@
 
 #include "main.h"
 
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <mutex>
 #include <vector>
 
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
+
+#include "instance_table.hpp"
 
 extern "C" int _write(int file, char *ptr, int len);
 
@@ -114,11 +114,10 @@ private:
   core::Semaphore sem_{1, 0};
   std::vector<uint8_t> rx_buf_;
   size_t rx_head_ = 0;
-  std::atomic<size_t> rx_tail_ = 0;
+  size_t rx_tail_ = 0;
 
-  static inline core::FixedHashMap<UART_HandleTypeDef *, UART *, 32> &
-  get_instances() {
-    static core::FixedHashMap<UART_HandleTypeDef *, UART *, 32> instances;
+  static inline InstanceTable<UART_HandleTypeDef *, UART, 32> &get_instances() {
+    static InstanceTable<UART_HandleTypeDef *, UART, 32> instances;
     return instances;
   }
 

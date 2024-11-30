@@ -4,7 +4,8 @@
 
 #include <cstdint>
 #include <functional>
-#include <map>
+
+#include "instance_table.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -37,7 +38,7 @@ namespace peripheral {
 class GPIO {
 public:
   GPIO(GPIO_TypeDef *port, uint16_t pin) : port_{port}, pin_{pin} {
-    get_instances()[pin_] = this;
+    get_instances().set(pin_, this);
   }
 
   ~GPIO() { get_instances().erase(pin_); }
@@ -59,8 +60,8 @@ private:
   uint16_t pin_;
   std::function<void()> exti_callback_;
 
-  static inline std::map<uint16_t, GPIO *> &get_instances() {
-    static std::map<uint16_t, GPIO *> instances;
+  static inline InstanceTable<uint16_t, GPIO, 32> &get_instances() {
+    static InstanceTable<uint16_t, GPIO, 32> instances;
     return instances;
   }
 

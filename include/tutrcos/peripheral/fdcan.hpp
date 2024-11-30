@@ -97,8 +97,9 @@ private:
   FDCAN_HandleTypeDef *hfdcan_;
   core::Queue<Message> rx_queue_;
 
-  static inline std::map<FDCAN_HandleTypeDef *, FDCAN *> &get_instances() {
-    static std::map<FDCAN_HandleTypeDef *, FDCAN *> instances;
+  static inline InstanceTable<FDCAN_HandleTypeDef *, FDCAN, 32> &
+  get_instances() {
+    static InstanceTable<FDCAN_HandleTypeDef *, FDCAN, 32> instances;
     return instances;
   }
 
