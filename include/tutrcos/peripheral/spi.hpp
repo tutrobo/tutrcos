@@ -7,6 +7,7 @@
 #include <mutex>
 
 #include "tutrcos/core.hpp"
+#include "tutrcos/utility.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -17,7 +18,10 @@ public:
     get_instances().set(hspi_, this);
   }
 
-  ~SPI() { get_instances().erase(hspi_); }
+  ~SPI() {
+    TUTRCOS_VERIFY(HAL_SPI_Abort(hspi_) == HAL_OK);
+    get_instances().erase(hspi_);
+  }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};

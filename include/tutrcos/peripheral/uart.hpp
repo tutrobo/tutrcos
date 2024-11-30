@@ -58,8 +58,8 @@ public:
   }
 
   ~UART() {
-    get_instances().erase(huart_);
     TUTRCOS_VERIFY(HAL_UART_Abort(huart_) == HAL_OK);
+    get_instances().erase(huart_);
   }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
