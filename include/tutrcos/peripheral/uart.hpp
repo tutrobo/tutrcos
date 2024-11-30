@@ -118,9 +118,8 @@ private:
   size_t rx_head_ = 0;
   std::atomic<size_t> rx_tail_ = 0;
 
-  static inline PeripheralTable<UART_HandleTypeDef *, UART, 32> &
-  get_instances() {
-    static PeripheralTable<UART_HandleTypeDef *, UART, 32> instances;
+  static inline InstanceTable<UART_HandleTypeDef *, UART, 32> &get_instances() {
+    static InstanceTable<UART_HandleTypeDef *, UART, 32> instances;
     return instances;
   }
 

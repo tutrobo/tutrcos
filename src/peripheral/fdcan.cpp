@@ -8,9 +8,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t) {
   static FDCAN_RxHeaderTypeDef rx_header;
   static tutrcos::peripheral::CANBase::Message msg;
 
-  auto itr = tutrcos::peripheral::FDCAN::get_instances().find(hfdcan);
-  if (itr != tutrcos::peripheral::FDCAN::get_instances().end()) {
-    auto fdcan = itr->second;
+  if (auto fdcan = tutrcos::peripheral::FDCAN::get_instances().get(hfdcan)) {
     for (size_t i = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0); i > 0;
          --i) {
       if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header,

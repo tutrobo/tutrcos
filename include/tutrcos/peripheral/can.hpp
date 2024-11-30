@@ -4,12 +4,12 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <map>
 
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
 
 #include "can_base.hpp"
+#include "peripheral_table.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -86,8 +86,8 @@ private:
   CAN_HandleTypeDef *hcan_;
   core::Queue<Message> rx_queue_;
 
-  static inline std::map<CAN_HandleTypeDef *, CAN *> &get_instances() {
-    static std::map<CAN_HandleTypeDef *, CAN *> instances;
+  static inline InstanceTable<CAN_HandleTypeDef *, CAN, 32> &get_instances() {
+    static InstanceTable<CAN_HandleTypeDef *, CAN, 32> instances;
     return instances;
   }
 

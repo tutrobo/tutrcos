@@ -79,8 +79,8 @@ private:
   core::Mutex mtx_;
   core::Semaphore sem_{1, 0};
 
-  static inline PeripheralTable<SPI_HandleTypeDef *, SPI, 32> &get_instances() {
-    static PeripheralTable<SPI_HandleTypeDef *, SPI, 32> instances;
+  static inline InstanceTable<SPI_HandleTypeDef *, SPI, 32> &get_instances() {
+    static InstanceTable<SPI_HandleTypeDef *, SPI, 32> instances;
     return instances;
   }
 

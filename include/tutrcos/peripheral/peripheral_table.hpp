@@ -7,7 +7,7 @@
 namespace tutrcos {
 namespace peripheral {
 
-template <class K, class V, size_t N> class PeripheralTable {
+template <class K, class V, size_t N> class InstanceTable {
 private:
   struct Entry {
     enum class State {
