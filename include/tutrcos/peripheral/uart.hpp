@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <map>
 #include <mutex>
 #include <vector>
 
@@ -53,14 +52,14 @@ class UART {
 public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64)
       : huart_{huart}, rx_buf_(rx_queue_size) {
-    get_instances()[huart_] = this;
+    get_instances().set(huart_, this);
     TUTRCOS_VERIFY(HAL_UARTEx_ReceiveToIdle_DMA(huart_, rx_buf_.data(),
                                                 rx_buf_.size()) == HAL_OK);
   }
 
   ~UART() {
-    get_instances().erase(huart_);
     TUTRCOS_VERIFY(HAL_UART_Abort(huart_) == HAL_OK);
+    get_instances().erase(huart_);
   }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
@@ -117,8 +116,9 @@ private:
   size_t rx_head_ = 0;
   std::atomic<size_t> rx_tail_ = 0;
 
-  static inline std::map<UART_HandleTypeDef *, UART *> &get_instances() {
-    static std::map<UART_HandleTypeDef *, UART *> instances;
+  static inline core::FixedHashMap<UART_HandleTypeDef *, UART *, 32> &
+  get_instances() {
+    static core::FixedHashMap<UART_HandleTypeDef *, UART *, 32> instances;
     return instances;
   }
 
@@ -130,7 +130,7 @@ private:
   friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,
                                            uint16_t Size);
-  friend void ::HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart);
   friend int ::_write(int file, char *ptr, int len);
 };
 

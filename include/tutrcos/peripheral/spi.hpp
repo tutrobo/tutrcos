@@ -4,19 +4,24 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <map>
 #include <mutex>
 
 #include "tutrcos/core.hpp"
+#include "tutrcos/utility.hpp"
 
 namespace tutrcos {
 namespace peripheral {
 
 class SPI {
 public:
-  SPI(SPI_HandleTypeDef *hspi) : hspi_{hspi} { get_instances()[hspi_] = this; }
+  SPI(SPI_HandleTypeDef *hspi) : hspi_{hspi} {
+    get_instances().set(hspi_, this);
+  }
 
-  ~SPI() { get_instances().erase(hspi_); }
+  ~SPI() {
+    TUTRCOS_VERIFY(HAL_SPI_Abort(hspi_) == HAL_OK);
+    get_instances().erase(hspi_);
+  }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
@@ -72,8 +77,9 @@ private:
   core::Mutex mtx_;
   core::Semaphore sem_{1, 0};
 
-  static inline std::map<SPI_HandleTypeDef *, SPI *> &get_instances() {
-    static std::map<SPI_HandleTypeDef *, SPI *> instances;
+  static inline core::FixedHashMap<SPI_HandleTypeDef *, SPI *, 32> &
+  get_instances() {
+    static core::FixedHashMap<SPI_HandleTypeDef *, SPI *, 32> instances;
     return instances;
   }
 
