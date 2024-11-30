@@ -132,6 +132,7 @@ public:
 
   C6x0(Manager &manager, Type type, ID id)
       : EncoderBase{8192}, manager_{manager}, type_{type}, id_{id} {
+    TUTRCOS_VERIFY(manager_.motors_[utility::to_underlying(id_)] == nullptr);
     manager_.motors_[utility::to_underlying(id_)] = this;
   }
 
