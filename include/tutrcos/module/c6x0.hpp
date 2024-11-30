@@ -125,7 +125,7 @@ public:
 
   private:
     peripheral::CANBase &can_;
-    std::array<C6x0 *, 8> motors_;
+    std::array<C6x0 *, 8> motors_{};
 
     friend C6x0;
   };
