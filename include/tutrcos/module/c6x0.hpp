@@ -108,16 +108,16 @@ public:
       msg.dlc = 8;
       for (size_t i = 0; i < 4; ++i) {
         if (motors_[i]) {
-          msg.data[i * 2] = motors_[i]->current_target_ >> 8;
-          msg.data[i * 2 + 1] = motors_[i]->current_target_;
+          msg.data[i * 2] = motors_[i]->target_current_ >> 8;
+          msg.data[i * 2 + 1] = motors_[i]->target_current_;
         }
       }
       can_.transmit(msg, 0);
       msg.id = 0x1FF;
       for (size_t i = 0; i < 4; ++i) {
         if (motors_[i + 4]) {
-          msg.data[i * 2] = motors_[i + 4]->current_target_ >> 8;
-          msg.data[i * 2 + 1] = motors_[i + 4]->current_target_;
+          msg.data[i * 2] = motors_[i + 4]->target_current_ >> 8;
+          msg.data[i * 2 + 1] = motors_[i + 4]->target_current_;
         }
       }
       can_.transmit(msg, 0);
@@ -153,10 +153,10 @@ public:
   void set_current(int16_t current) {
     switch (type_) {
     case Type::C610:
-      current_target_ = current;
+      target_current_ = current;
       break;
     case Type::C620:
-      current_target_ = current * 16384 / 25000;
+      target_current_ = current * 16384 / 25000;
       break;
     }
   }
@@ -169,7 +169,7 @@ private:
   int16_t prev_count_ = 0;
   int16_t rpm_ = 0;
   int16_t current_ = 0;
-  int16_t current_target_ = 0;
+  int16_t target_current_ = 0;
 };
 
 } // namespace module
