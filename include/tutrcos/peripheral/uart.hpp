@@ -2,10 +2,8 @@
 
 #include "main.h"
 
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <mutex>
 #include <vector>
 
@@ -116,7 +114,7 @@ private:
   core::Semaphore sem_{1, 0};
   std::vector<uint8_t> rx_buf_;
   size_t rx_head_ = 0;
-  std::atomic<size_t> rx_tail_ = 0;
+  size_t rx_tail_ = 0;
 
   static inline InstanceTable<UART_HandleTypeDef *, UART, 32> &get_instances() {
     static InstanceTable<UART_HandleTypeDef *, UART, 32> instances;

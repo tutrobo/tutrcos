@@ -12,7 +12,9 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
   if (auto uart = tutrcos::peripheral::UART::get_instances().get(huart)) {
+    __disable_irq();
     uart->rx_tail_ = Size;
+    __enable_irq();
     uart->sem_.release();
   }
 }

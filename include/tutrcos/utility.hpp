@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 #include <type_traits>
 #include <vector>
