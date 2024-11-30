@@ -9,6 +9,8 @@
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
 
+#include "peripheral_table.hpp"
+
 namespace tutrcos {
 namespace peripheral {
 
@@ -77,9 +79,8 @@ private:
   core::Mutex mtx_;
   core::Semaphore sem_{1, 0};
 
-  static inline core::FixedHashMap<SPI_HandleTypeDef *, SPI *, 32> &
-  get_instances() {
-    static core::FixedHashMap<SPI_HandleTypeDef *, SPI *, 32> instances;
+  static inline PeripheralTable<SPI_HandleTypeDef *, SPI, 32> &get_instances() {
+    static PeripheralTable<SPI_HandleTypeDef *, SPI, 32> instances;
     return instances;
   }
 

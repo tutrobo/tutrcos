@@ -12,6 +12,8 @@
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
 
+#include "peripheral_table.hpp"
+
 extern "C" int _write(int file, char *ptr, int len);
 
 namespace tutrcos {
@@ -116,9 +118,9 @@ private:
   size_t rx_head_ = 0;
   std::atomic<size_t> rx_tail_ = 0;
 
-  static inline core::FixedHashMap<UART_HandleTypeDef *, UART *, 32> &
+  static inline PeripheralTable<UART_HandleTypeDef *, UART, 32> &
   get_instances() {
-    static core::FixedHashMap<UART_HandleTypeDef *, UART *, 32> instances;
+    static PeripheralTable<UART_HandleTypeDef *, UART, 32> instances;
     return instances;
   }
 
