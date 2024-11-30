@@ -12,7 +12,7 @@
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
 
-#include "peripheral_table.hpp"
+#include "instance_table.hpp"
 
 extern "C" int _write(int file, char *ptr, int len);
 

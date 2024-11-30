@@ -9,7 +9,7 @@
 #include "tutrcos/utility.hpp"
 
 #include "can_base.hpp"
-#include "peripheral_table.hpp"
+#include "instance_table.hpp"
 
 namespace tutrcos {
 namespace peripheral {

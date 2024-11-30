@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <functional>
 
-#include "peripheral_table.hpp"
+#include "instance_table.hpp"
 
 namespace tutrcos {
 namespace peripheral {
