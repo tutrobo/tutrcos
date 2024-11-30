@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -13,9 +14,9 @@ namespace tutrcos {
 namespace module {
 
 /**
- * 
+ *
  * modeはSTS3215のworkmodeの設定に応じて選択してください。
- * 
+ *
  * @code{.cpp}
  * #include <cstdio>
  * #include <tutrcos.hpp>
@@ -28,7 +29,7 @@ namespace module {
  *   using namespace tutrcos::core;
  *   using namespace tutrcos::peripheral;
  *   using namespace tutrcos::module;
- * 
+ *
  *   UART uart2(&huart2); // デバッグ出力用
  *   uart2.enable_stdout();
  *
@@ -57,31 +58,37 @@ namespace module {
  * }
  * @endcode
  */
-class STS3215 : public EncoderBase  {
+class STS3215 : public EncoderBase {
 public:
   enum class Mode {
     RAD = 0,
-    PWM = 2
+    PWM = 2,
   };
 
-  STS3215(peripheral::UART &uart, Mode mode, uint8_t id) : EncoderBase{ppr_}, uart_{uart}, mode_{mode}, id_{id} {}
+  STS3215(peripheral::UART &uart, Mode mode, uint8_t id)
+      : EncoderBase{ppr_}, uart_{uart}, mode_{mode}, id_{id} {}
 
   bool update() {
     uint8_t rx_data[8] = {0};
-    for(uint8_t i = 0; ; ++i){
-      if(i > 5) return false;
+    for (uint8_t i = 0;; ++i) {
+      if (i > 5)
+        return false;
       uart_.flush();
-      if(send({0x02, 0x38, 0x02})){
-        if(uart_.receive(rx_data, 8, 1)){// rx_data : 0xff 0xff id size cmd data data checksum
+      if (send({0x02, 0x38, 0x02})) {
+        if (uart_.receive(
+                rx_data, 8,
+                1)) { // rx_data : 0xff 0xff id size cmd data data checksum
           uint8_t checksum = 0;
-          for(uint8_t i=2 ; i<8 ; i++) checksum += rx_data[i];
-          if((rx_data[0] == 0xff) && (rx_data[1] == 0xff) && (checksum == 0xff) && (rx_data[2] == id_)) {
-            int16_t count = static_cast<int16_t>(rx_data[6]<<8) | rx_data[5];
+          for (uint8_t i = 2; i < 8; i++)
+            checksum += rx_data[i];
+          if ((rx_data[0] == 0xff) && (rx_data[1] == 0xff) &&
+              (checksum == 0xff) && (rx_data[2] == id_)) {
+            int16_t count = static_cast<int16_t>(rx_data[6] << 8) | rx_data[5];
             int16_t delta = count - prev_count_;
             if (delta > (ppr_ / 2)) {
-                delta -= ppr_;
+              delta -= ppr_;
             } else if (delta < -(ppr_ / 2)) {
-                delta += ppr_;
+              delta += ppr_;
             }
             set_count(get_count() + delta);
             prev_count_ = count;
@@ -92,21 +99,21 @@ public:
     }
 
     bool res = true;
-    //transmit
+    // transmit
     int16_t target = 0;
     uint8_t upper, lower;
-    switch(mode_){ 
+    switch (mode_) {
     case Mode::RAD:
-      ref_ = CONSTRAIN(ref_, 0, 2*M_PI);
-      target = ref_ / (2*M_PI) * (ppr_-1);
-      upper = static_cast<uint8_t>(target>>8);
+      ref_ = std::clamp<float>(ref_, 0, 2 * M_PI);
+      target = ref_ / (2 * M_PI) * (ppr_ - 1);
+      upper = static_cast<uint8_t>(target >> 8);
       lower = static_cast<uint8_t>(target);
       res = send({0x03, 0x2A, lower, upper});
       break;
     case Mode::PWM:
-      ref_ = CONSTRAIN(ref_, -1, 1);
-      target = static_cast<uint16_t>(abs(ref_*1023));
-      upper = static_cast<uint8_t>(target>>8) | ((ref_ > 0)?0x04:0);
+      ref_ = std::clamp<float>(ref_, -1, 1);
+      target = static_cast<uint16_t>(abs(ref_ * 1023));
+      upper = static_cast<uint8_t>(target >> 8) | ((ref_ > 0) ? 0x04 : 0);
       lower = static_cast<uint8_t>(target);
       res = send({0x03, 0x2C, lower, upper});
       break;
@@ -114,7 +121,7 @@ public:
     return res;
   }
 
-  void set_ref(float value){ ref_ = value; }
+  void set_ref(float value) { ref_ = value; }
 
 private:
   inline static constexpr uint16_t ppr_ = 4096;
@@ -127,11 +134,12 @@ private:
   int16_t current_ = 0;
   int16_t current_target_ = 0;
 
-  bool send(std::vector<uint8_t> tx){
+  bool send(std::vector<uint8_t> tx) {
     uint8_t size = tx.size() + 1;
     tx.insert(tx.begin(), {0xff, 0xff, id_, size});
     uint8_t checksum = 0;
-    for(uint8_t i=2, size = tx.size() ; i<size ; i++) checksum += tx[i];
+    for (uint8_t i = 2, size = tx.size(); i < size; i++)
+      checksum += tx[i];
     tx.emplace_back(~checksum);
     return uart_.transmit(tx.data(), tx.size(), 1);
   }

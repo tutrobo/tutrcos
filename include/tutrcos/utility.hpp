@@ -17,13 +17,9 @@
 namespace tutrcos {
 namespace utility {
 
-#ifndef CONSTRAIN
-#define CONSTRAIN(x, min, max) ((x < min)? min : (x > max)? max : x)
-#endif 
-
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643383279
-#endif 
+#endif
 
 template <class T>
 constexpr std::underlying_type_t<T> to_underlying(T value) noexcept {
