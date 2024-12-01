@@ -3,6 +3,9 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <mutex>
+
+#include "tutrcos/core.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -24,6 +27,7 @@ private:
 public:
   V *get(const K &key) {
     for (size_t i = 0; i < N; ++i) {
+      std::lock_guard lock{core::interrupt_lock};
       Entry &entry = entries_[hash(key, i)];
       if (entry.state == Entry::State::EMPTY) {
         return nullptr;
@@ -37,6 +41,7 @@ public:
 
   bool set(const K &key, V *value) {
     for (size_t i = 0; i < N; ++i) {
+      std::lock_guard lock{core::interrupt_lock};
       Entry &entry = entries_[hash(key, i)];
       if (entry.state != Entry::State::OCCUPIED) {
         entry.key = key;
@@ -54,6 +59,7 @@ public:
 
   bool erase(const K &key) {
     for (size_t i = 0; i < N; ++i) {
+      std::lock_guard lock{core::interrupt_lock};
       Entry &entry = entries_[hash(key, i)];
       if (entry.state == Entry::State::EMPTY) {
         return false;
