@@ -18,7 +18,7 @@ class CAN : public CANBase {
 public:
   CAN(CAN_HandleTypeDef *hcan, size_t rx_queue_size = 64)
       : hcan_{hcan}, rx_queue_{rx_queue_size} {
-    get_instances()[hcan_] = this;
+    get_instances().set(hcan_, this);
 
     CAN_FilterTypeDef filter{};
     filter.FilterIdHigh = 0;
@@ -44,8 +44,8 @@ public:
   }
 
   ~CAN() {
-    get_instances().erase(hcan_);
     TUTRCOS_VERIFY(HAL_CAN_Stop(hcan_) == HAL_OK);
+    get_instances().erase(hcan_);
   }
 
   bool transmit(const Message &msg, uint32_t timeout) override {

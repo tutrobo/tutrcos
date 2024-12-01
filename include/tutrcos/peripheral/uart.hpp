@@ -104,6 +104,8 @@ public:
 
   void enable_stdout() { get_uart_stdout() = this; }
 
+  UART_HandleTypeDef *get_hal_handle() { return huart_; }
+
 private:
   UART_HandleTypeDef *huart_;
   core::Mutex mtx_;
