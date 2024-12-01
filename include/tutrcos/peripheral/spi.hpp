@@ -87,6 +87,7 @@ private:
   friend void ::HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi);
   friend void ::HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi);
   friend void ::HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
+  friend void ::HAL_SPI_AbortCpltCallback(SPI_HandleTypeDef *hspi);
 };
 
 } // namespace peripheral
