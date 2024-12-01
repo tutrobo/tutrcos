@@ -55,6 +55,10 @@ public:
     callback_ = std::move(callback);
   }
 
+  GPIO_TypeDef *get_hal_port() { return port_; }
+
+  uint16_t get_hal_pin() { return pin_; }
+
 private:
   GPIO_TypeDef *port_;
   uint16_t pin_;

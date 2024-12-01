@@ -49,6 +49,8 @@ public:
     return true;
   }
 
+  I2C_HandleTypeDef *get_hal_handle() { return hi2c_; }
+
 private:
   I2C_HandleTypeDef *hi2c_;
   core::Mutex mtx_;

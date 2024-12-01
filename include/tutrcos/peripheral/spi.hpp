@@ -74,6 +74,8 @@ public:
     return true;
   }
 
+  SPI_HandleTypeDef *get_hal_handle() { return hspi_; }
+
 private:
   SPI_HandleTypeDef *hspi_;
   core::Mutex mtx_;

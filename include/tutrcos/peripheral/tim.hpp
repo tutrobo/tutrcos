@@ -43,6 +43,8 @@ public:
     __HAL_TIM_SET_COMPARE(htim_, channel, compare);
   }
 
+  TIM_HandleTypeDef *get_hal_handle() { return htim_; }
+
 private:
   TIM_HandleTypeDef *htim_;
 };
