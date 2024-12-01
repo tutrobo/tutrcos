@@ -37,7 +37,6 @@ public:
     }
 
     int16_t count = response & (cpr - 1);
-
     switch (mode_) {
     case Mode::SINGLE_TURN: {
       set_count(count);
