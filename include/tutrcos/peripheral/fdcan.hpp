@@ -18,7 +18,7 @@ class FDCAN : public CANBase {
 public:
   FDCAN(FDCAN_HandleTypeDef *hfdcan, size_t rx_queue_size = 64)
       : hfdcan_{hfdcan}, rx_queue_{rx_queue_size} {
-    get_instances()[hfdcan_] = this;
+    get_instances().set(hfdcan_, this);
 
     TUTRCOS_VERIFY(HAL_FDCAN_ActivateNotification(
                        hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) == HAL_OK);
@@ -26,8 +26,8 @@ public:
   }
 
   ~FDCAN() {
-    get_instances().erase(hfdcan_);
     TUTRCOS_VERIFY(HAL_FDCAN_Stop(hfdcan_) == HAL_OK);
+    get_instances().erase(hfdcan_);
   }
 
   bool transmit(const Message &msg, uint32_t timeout) override {
