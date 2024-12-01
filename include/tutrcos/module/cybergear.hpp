@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 #include "tutrcos/peripheral/can_base.hpp"
 #include "tutrcos/utility.hpp"
@@ -254,6 +255,15 @@ private:
   void setVelRef(float value) { writeFloat(motor_id_, ADDR_SPEED_REF, value, VEL_MIN, VEL_MAX); }
   void setCurRef(float value) { writeFloat(motor_id_,    ADDR_IQ_REF, value, CUR_MIN, CUR_MAX); }
   
+  bool transmit(peripheral::CANBase::IDType idtype, uint32_t id, const std::array<uint8_t, 8U> &data, uint32_t timeout){
+    peripheral::CANBase::Message msg;
+    msg.id_type = idtype;
+    msg.id = id;
+    msg.data = data;
+    msg.dlc = 8;
+    return can_.transmit(msg, timeout);
+  }
+
   void process_motor_packet(const std::array<uint8_t, 8U> &data){
     motor_status_.raw_position = data[1] | data[0] << 8;
     motor_status_.raw_velocity = data[3] | data[2] << 8;
@@ -271,24 +281,16 @@ private:
   
   void process_read_parameter_packet(const std::array<uint8_t, 8U> &data){
     uint16_t index = data[1] << 8 | data[0];
-    union data_exchange{
-      uint8_t uint8_data[4];
-      int16_t int16_data[2];
-      float float_data;
-    };
-    data_exchange ex{data[4], data[5], data[6], data[7]};
-    data_exchange ex2{data[6], data[7], data[4], data[5]};
-    data_exchange ex3{data[7], data[6], data[5], data[4]};
-    uint8_t uint8_data = ex.uint8_data[0];
-    int16_t int16_data = ex.int16_data[0];
-    float float_data = ex.float_data;
-    
-    for(uint8_t d : data) printf("%02x, ", d);
-    printf("data : %f, %f\r\n", ex2.float_data, ex3.float_data);
+    uint8_t uint8_data;
+    memcpy(&uint8_data, &data[4], sizeof(uint8_t));
+    int16_t int16_data;
+    memcpy(&int16_data, &data[4], sizeof(int16_t));
+    float float_data;
+    memcpy(&float_data, &data[4], sizeof(float));
 
-    // bool is_updated = true;
-    // printf("data : %02x, %04x, %f / ", uint8_data, (uint16_t)int16_data, float_data);
-    // printf("\r\n");
+    for(uint8_t d : data) printf("%02x, ", d);
+    printf("data : %02x, %04x, %f / ", uint8_data, (uint16_t)int16_data, float_data);
+    printf("\r\n");
     return;
 
     switch (index) {
@@ -376,7 +378,7 @@ private:
 
   void send(uint8_t can_id, uint8_t cmd_id, uint16_t option,  const std::array<uint8_t, 8U> &data){
     uint32_t id = cmd_id << 24 | option << 8 | can_id;
-    can_.transmit(peripheral::CANBase::IDType::EXTENDED, id, data, 1);
+    transmit(peripheral::CANBase::IDType::EXTENDED, id, data, 1);
     ++send_count_;
   }
 

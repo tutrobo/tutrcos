@@ -40,10 +40,8 @@ public:
 
     int16_t count = response & (cpr - 1);
     int16_t delta = count - prev_count_;
-
-    if (is_first_time_ && (mode_ == Mode::SINGLE_TURN)) {
-      is_first_time_ = false;
-    }else{
+    
+    if (mode_ == Mode::MULTI_TURN) {
       if (delta > (cpr / 2)) {
         delta -= cpr;
       } else if (delta < -(cpr / 2)) {
@@ -74,7 +72,6 @@ private:
   Mode mode_;
   uint8_t address_;
   int16_t prev_count_ = 0;
-  bool is_first_time_ = true;
   
 
   bool send_command(uint8_t command, uint8_t *response) {

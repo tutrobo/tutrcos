@@ -72,25 +72,29 @@ public:
   bool update() {
     uint8_t rx_data[8] = {0};
     for (uint8_t i = 0;; ++i) {
-      if (i > 5)
+      if (i > 5) {
         return false;
+      }
       uart_.flush();
       if (send({0x02, 0x38, 0x02})) {
-        if (uart_.receive(
-                rx_data, 8,
-                1)) { // rx_data : 0xff 0xff id size cmd data data checksum
+        // rx_data : 0xff 0xff id size cmd data data checksum
+        if (uart_.receive(rx_data, 8, 1)) {
           uint8_t checksum = 0;
-          for (uint8_t i = 2; i < 8; i++)
+          for (uint8_t i = 2; i < 8; i++){
             checksum += rx_data[i];
+          }
           if ((rx_data[0] == 0xff) && (rx_data[1] == 0xff) &&
               (checksum == 0xff) && (rx_data[2] == id_)) {
+
             int16_t count = static_cast<int16_t>(rx_data[6] << 8) | rx_data[5];
             int16_t delta = count - prev_count_;
+
             if (delta > (ppr_ / 2)) {
               delta -= ppr_;
             } else if (delta < -(ppr_ / 2)) {
               delta += ppr_;
             }
+
             set_count(get_count() + delta);
             prev_count_ = count;
             break;
