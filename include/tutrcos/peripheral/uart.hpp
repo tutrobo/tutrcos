@@ -77,10 +77,6 @@ public:
     return true;
   }
 
-  bool transmit(const std::vector<uint8_t> &data, uint32_t timeout) {
-    return transmit(data.data(), data.size(), timeout);
-  }
-
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
     uint32_t start = core::Kernel::get_ticks();
