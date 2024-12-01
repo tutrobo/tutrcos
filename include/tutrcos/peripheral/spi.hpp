@@ -74,6 +74,8 @@ public:
     return true;
   }
 
+  SPI_HandleTypeDef *get_hal_handle() { return hspi_; }
+
 private:
   SPI_HandleTypeDef *hspi_;
   core::Mutex mtx_;
@@ -87,6 +89,7 @@ private:
   friend void ::HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi);
   friend void ::HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi);
   friend void ::HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
+  friend void ::HAL_SPI_AbortCpltCallback(SPI_HandleTypeDef *hspi);
 };
 
 } // namespace peripheral

@@ -11,7 +11,7 @@ namespace tutrcos {
 namespace peripheral {
 
 /**
- * `GPIO::set_exti_callback` を使う場合は System Core -> GPIO -> NVIC -> EXTI
+ * `GPIO::set_callback` を使う場合は System Core -> GPIO -> NVIC -> EXTI
  * line[x:x] interrupts を有効化してください。
  *
  * @code{.cpp}
@@ -24,7 +24,7 @@ namespace peripheral {
  *   GPIO led(LD2_GPIO_Port, LD2_Pin);
  *   GPIO button(B1_GPIO_Port, B1_Pin);
  *
- *   button.set_exti_callback([&] {
+ *   button.set_callback([&] {
  *     // GPIO EXTI 割り込み
  *   });
  *
@@ -51,14 +51,18 @@ public:
 
   void toggle() { HAL_GPIO_TogglePin(port_, pin_); }
 
-  void set_exti_callback(std::function<void()> &&callback) {
-    exti_callback_ = std::move(callback);
+  void set_callback(std::function<void()> &&callback) {
+    callback_ = std::move(callback);
   }
+
+  GPIO_TypeDef *get_hal_port() { return port_; }
+
+  uint16_t get_hal_pin() { return pin_; }
 
 private:
   GPIO_TypeDef *port_;
   uint16_t pin_;
-  std::function<void()> exti_callback_;
+  std::function<void()> callback_;
 
   static inline InstanceTable<uint16_t, GPIO, 32> &get_instances() {
     static InstanceTable<uint16_t, GPIO, 32> instances;

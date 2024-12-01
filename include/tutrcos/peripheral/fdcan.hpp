@@ -93,6 +93,8 @@ public:
     return rx_queue_.pop(msg, timeout);
   }
 
+  FDCAN_HandleTypeDef *get_hal_handle() { return hfdcan_; }
+
 private:
   FDCAN_HandleTypeDef *hfdcan_;
   core::Queue<Message> rx_queue_;

@@ -82,6 +82,8 @@ public:
     return rx_queue_.pop(msg, timeout);
   }
 
+  CAN_HandleTypeDef *get_hal_handle() { return hcan_; }
+
 private:
   CAN_HandleTypeDef *hcan_;
   core::Queue<Message> rx_queue_;
