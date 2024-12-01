@@ -19,12 +19,12 @@ public:
     _14 = 14,
   };
 
-  enum class Type {
+  enum class Mode {
     SINGLE_TURN,
     MULTI_TURN,
   };
 
-  AMT21(peripheral::UART &uart, Resolution resolution, Type type,
+  AMT21(peripheral::UART &uart, Resolution resolution, Mode type,
         uint8_t address)
       : EncoderBase{1 << utility::to_underlying(resolution)}, uart_{uart},
         resolution_{resolution}, type_{type}, address_{address} {}
@@ -38,7 +38,11 @@ public:
     int16_t count = response & (cpr - 1);
 
     switch (type_) {
-    case Type::SINGLE_TURN: {
+    case Mode::SINGLE_TURN: {
+      set_count(count);
+      break;
+    }
+    case Mode::MULTI_TURN: {
       int16_t delta = count - prev_count_;
       if (delta > (cpr / 2)) {
         delta -= cpr;
@@ -47,15 +51,6 @@ public:
       }
       set_count(get_count() + delta);
       prev_count_ = count;
-      break;
-    }
-    case Type::MULTI_TURN: {
-      uint16_t response;
-      if (!send_command(0x01, reinterpret_cast<uint8_t *>(&response))) {
-        return false;
-      }
-      int16_t rotation = response & ((1 << 14) - 1);
-      set_count(rotation * cpr + count);
       break;
     }
     }
@@ -74,7 +69,7 @@ public:
 private:
   peripheral::UART &uart_;
   Resolution resolution_;
-  Type type_;
+  Mode type_;
   uint8_t address_;
   int16_t prev_count_ = 0;
 
