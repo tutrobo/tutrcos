@@ -25,33 +25,37 @@ public:
     MULTI_TURN,
   };
 
-  AMT21_SoftDE(peripheral::UART &uart, peripheral::GPIO &de, Resolution resolution,
-        Mode mode, uint8_t address)
-      : EncoderBase{1 << utility::to_underlying(resolution)}, uart_{uart}, huart_{uart.get_hal_handle()},
-        de_{de}, resolution_{resolution}, mode_{mode}, address_{address} {}
+  AMT21_SoftDE(peripheral::UART &uart, peripheral::GPIO &de,
+               Resolution resolution, Mode mode, uint8_t address)
+      : EncoderBase{1 << utility::to_underlying(resolution)}, uart_{uart},
+        huart_{uart.get_hal_handle()}, de_{de}, resolution_{resolution},
+        mode_{mode}, address_{address} {}
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
     uint16_t response;
-    
     if (!send_command(0x00, reinterpret_cast<uint8_t *>(&response))) {
       return false;
     }
 
     int16_t count = response & (cpr - 1);
-    int16_t delta = count - prev_count_;
-    
-    if (mode_ == Mode::MULTI_TURN) {
+    switch (mode_) {
+    case Mode::SINGLE_TURN: {
+      set_count(count);
+      break;
+    }
+    case Mode::MULTI_TURN: {
+      int16_t delta = count - prev_count_;
       if (delta > (cpr / 2)) {
         delta -= cpr;
       } else if (delta < -(cpr / 2)) {
         delta += cpr;
       }
+      set_count(get_count() + delta);
+      prev_count_ = count;
+      break;
     }
-
-    set_count(get_count() + delta);
-    prev_count_ = count;
-
+    }
     return true;
   }
 
@@ -72,7 +76,6 @@ private:
   Mode mode_;
   uint8_t address_;
   int16_t prev_count_ = 0;
-  
 
   bool send_command(uint8_t command, uint8_t *response) {
     uint8_t data = address_ | command;
