@@ -37,19 +37,24 @@ public:
     }
 
     int16_t count = response & (cpr - 1);
-    int16_t delta = count - prev_count_;
 
-    if (mode_ == Mode::MULTI_TURN) {
+    switch (mode_) {
+    case Mode::SINGLE_TURN: {
+      set_count(count);
+      break;
+    }
+    case Mode::MULTI_TURN: {
+      int16_t delta = count - prev_count_;
       if (delta > (cpr / 2)) {
         delta -= cpr;
       } else if (delta < -(cpr / 2)) {
         delta += cpr;
       }
+      set_count(get_count() + delta);
+      prev_count_ = count;
+      break;
     }
-
-    set_count(get_count() + delta);
-    prev_count_ = count;
-
+    }
     return true;
   }
 
