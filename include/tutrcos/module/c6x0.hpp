@@ -78,7 +78,7 @@ public:
   public:
     Manager(peripheral::CANBase &can) : can_{can} {}
 
-    void update() {
+    bool update() {
       peripheral::CANBase::Message msg;
       while (can_.receive(msg, 0)) {
         for (size_t i = 0; i < 8; ++i) {
@@ -103,6 +103,7 @@ public:
         }
       }
 
+      msg.data.fill(0);
       msg.id_type = peripheral::CANBase::IDType::STANDARD;
       msg.id = 0x200;
       msg.dlc = 8;
@@ -112,7 +113,11 @@ public:
           msg.data[i * 2 + 1] = motors_[i]->target_current_;
         }
       }
-      can_.transmit(msg, 0);
+      if (!can_.transmit(msg, 0)) {
+        return false;
+      }
+
+      msg.data.fill(0);
       msg.id = 0x1FF;
       for (size_t i = 0; i < 4; ++i) {
         if (motors_[i + 4]) {
@@ -120,7 +125,7 @@ public:
           msg.data[i * 2 + 1] = motors_[i + 4]->target_current_;
         }
       }
-      can_.transmit(msg, 0);
+      return can_.transmit(msg, 0);
     }
 
   private:
