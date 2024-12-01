@@ -5,7 +5,6 @@
 #include <array>
 #include <cstdint>
 
-#include "tutrcos/peripheral/gpio.hpp"
 #include "tutrcos/peripheral/uart.hpp"
 
 #include "encoder_base.hpp"
@@ -25,10 +24,10 @@ public:
     MULTI_TURN,
   };
 
-  AMT21(peripheral::UART &uart, peripheral::GPIO &de, Resolution resolution,
-        Type type, uint8_t address)
+  AMT21(peripheral::UART &uart, Resolution resolution, Type type,
+        uint8_t address)
       : EncoderBase{1 << utility::to_underlying(resolution)}, uart_{uart},
-        de_{de}, resolution_{resolution}, type_{type}, address_{address} {}
+        resolution_{resolution}, type_{type}, address_{address} {}
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
@@ -74,7 +73,6 @@ public:
 
 private:
   peripheral::UART &uart_;
-  peripheral::GPIO &de_;
   Resolution resolution_;
   Type type_;
   uint8_t address_;
@@ -82,22 +80,19 @@ private:
 
   bool send_command(uint8_t command, uint8_t *response) {
     uint8_t data = address_ | command;
-    de_.write(true);
+    uart_.flush();
     if (!uart_.transmit(&data, 1, 1)) {
       return false;
     }
-    de_.write(false);
     uart_.receive(reinterpret_cast<uint8_t *>(response), 2, 1);
     return checksum(response[0], response[1]);
   }
 
   bool send_extended_command(uint8_t command) {
     std::array<uint8_t, 2> data{static_cast<uint8_t>(address_ | 0x02), command};
-    de_.write(true);
     if (!uart_.transmit(data.data(), data.size(), 1)) {
       return false;
     }
-    de_.write(false);
     return true;
   }
 
