@@ -51,10 +51,9 @@ namespace peripheral {
 class UART {
 public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64)
-      : huart_{huart}, rx_buf_(rx_queue_size) {
+      : huart_{huart}, rx_queue_{rx_queue_size} {
     get_instances().set(huart_, this);
-    TUTRCOS_VERIFY(HAL_UARTEx_ReceiveToIdle_DMA(huart_, rx_buf_.data(),
-                                                rx_buf_.size()) == HAL_OK);
+    TUTRCOS_VERIFY(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
   }
 
   ~UART() {
@@ -85,7 +84,7 @@ public:
   bool receive(uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
     uint32_t start = core::Kernel::get_ticks();
-    while ((rx_tail_ + rx_buf_.size() - rx_head_) % rx_buf_.size() < size) {
+    while (rx_queue_.size() < size) {
       uint32_t elapsed = core::Kernel::get_ticks() - start;
       if (elapsed >= timeout) {
         return false;
@@ -93,17 +92,14 @@ public:
       sem_.try_acquire(1);
     }
     for (size_t i = 0; i < size; ++i) {
-      data[i] = rx_buf_[rx_head_++];
-      if (rx_head_ == rx_buf_.size()) {
-        rx_head_ = 0;
-      }
+      rx_queue_.pop(data[i], 0);
     }
     return true;
   }
 
   void flush() {
     std::lock_guard lock{mtx_};
-    rx_head_ = rx_tail_;
+    rx_queue_.clear();
   }
 
   void enable_stdout() { get_uart_stdout() = this; }
@@ -112,9 +108,8 @@ private:
   UART_HandleTypeDef *huart_;
   core::Mutex mtx_;
   core::Semaphore sem_{1, 0};
-  std::vector<uint8_t> rx_buf_;
-  size_t rx_head_ = 0;
-  size_t rx_tail_ = 0;
+  core::Queue<uint8_t> rx_queue_;
+  uint8_t rx_buf_;
 
   static inline InstanceTable<UART_HandleTypeDef *, UART, 32> &get_instances() {
     static InstanceTable<UART_HandleTypeDef *, UART, 32> instances;
@@ -127,9 +122,8 @@ private:
   }
 
   friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
-  friend void ::HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,
-                                           uint16_t Size);
-  friend void ::HAL_UART_AbortTransmitCpltCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart);
   friend int ::_write(int file, char *ptr, int len);
 };
 
