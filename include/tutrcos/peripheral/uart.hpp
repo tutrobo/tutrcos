@@ -129,7 +129,7 @@ private:
   friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,
                                            uint16_t Size);
-  friend void ::HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart);
+  friend void ::HAL_UART_AbortTransmitCpltCallback(UART_HandleTypeDef *huart);
   friend int ::_write(int file, char *ptr, int len);
 };
 

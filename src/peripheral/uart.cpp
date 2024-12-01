@@ -20,15 +20,20 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-  TUTRCOS_VERIFY(HAL_UART_Abort_IT(huart) == HAL_OK);
+  HAL_UART_AbortTransmit_IT(huart);
 }
 
-void HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart) {
+void HAL_UART_AbortTransmitCpltCallback(UART_HandleTypeDef *huart) {
+  if (__HAL_UART_GET_FLAG(huart, UART_FLAG_PE) != RESET) {
+    __HAL_UART_CLEAR_PEFLAG(huart);
+  } else if (__HAL_UART_GET_FLAG(huart, UART_FLAG_FE) != RESET) {
+    __HAL_UART_CLEAR_FEFLAG(huart);
+  } else if (__HAL_UART_GET_FLAG(huart, UART_FLAG_NE) != RESET) {
+    __HAL_UART_CLEAR_NEFLAG(huart);
+  } else if (__HAL_UART_GET_FLAG(huart, UART_FLAG_ORE) != RESET) {
+    __HAL_UART_CLEAR_OREFLAG(huart);
+  }
   if (auto uart = tutrcos::peripheral::UART::get_instances().get(huart)) {
-    __disable_irq();
-    uart->rx_head_ = 0;
-    uart->rx_tail_ = 0;
-    __enable_irq();
     uart->sem_.release();
     TUTRCOS_VERIFY(HAL_UARTEx_ReceiveToIdle_DMA(huart, uart->rx_buf_.data(),
                                                 uart->rx_buf_.size()) ==
