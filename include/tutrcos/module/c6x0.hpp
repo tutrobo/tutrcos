@@ -81,24 +81,23 @@ public:
     bool update() {
       peripheral::CANBase::Message msg;
       while (can_.receive(msg, 0)) {
-        for (size_t i = 0; i < 8; ++i) {
-          if (motors_[i] && msg.id == 0x201 + i) {
+        if (msg.id >= 0x201 && msg.id < 0x201 + 8) {
+          C6x0 *motor = motors_[msg.id - 0x201];
+          if (motor) {
             int16_t count =
                 static_cast<int16_t>(msg.data[0] << 8 | msg.data[1]);
-            int16_t delta = count - motors_[i]->prev_count_;
+            int16_t delta = count - motor->prev_count_;
             if (delta > 4096) {
               delta -= 8192;
             } else if (delta < -4096) {
               delta += 8192;
             }
-            motors_[i]->set_count(motors_[i]->get_count() + delta);
-            motors_[i]->prev_count_ = count;
+            motor->set_count(motor->get_count() + delta);
+            motor->prev_count_ = count;
 
-            motors_[i]->rpm_ =
-                static_cast<int16_t>(msg.data[2] << 8 | msg.data[3]);
-            motors_[i]->current_ =
+            motor->rpm_ = static_cast<int16_t>(msg.data[2] << 8 | msg.data[3]);
+            motor->current_ =
                 static_cast<int16_t>(msg.data[4] << 8 | msg.data[5]);
-            break;
           }
         }
       }
