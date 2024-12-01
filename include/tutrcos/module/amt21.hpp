@@ -19,15 +19,15 @@ public:
     _14 = 14,
   };
 
-  enum class Type {
+  enum class Mode {
     SINGLE_TURN,
     MULTI_TURN,
   };
 
-  AMT21(peripheral::UART &uart, Resolution resolution, Type type,
+  AMT21(peripheral::UART &uart, Resolution resolution, Mode mode,
         uint8_t address)
       : EncoderBase{1 << utility::to_underlying(resolution)}, uart_{uart},
-        resolution_{resolution}, type_{type}, address_{address} {}
+        resolution_{resolution}, mode_{mode}, address_{address} {}
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
@@ -35,30 +35,45 @@ public:
     if (!send_command(0x00, reinterpret_cast<uint8_t *>(&response))) {
       return false;
     }
-    int16_t count = response & (cpr - 1);
 
-    switch (type_) {
-    case Type::SINGLE_TURN: {
-      int16_t delta = count - prev_count_;
+    int16_t count = response & (cpr - 1);
+    int16_t delta = count - prev_count_;
+
+    if (is_first_time_ && (mode_ == Mode::SINGLE_TURN)) {
+      is_first_time_ = false;
+    }else{
       if (delta > (cpr / 2)) {
         delta -= cpr;
       } else if (delta < -(cpr / 2)) {
         delta += cpr;
       }
-      set_count(get_count() + delta);
-      prev_count_ = count;
-      break;
     }
-    case Type::MULTI_TURN: {
-      uint16_t response;
-      if (!send_command(0x01, reinterpret_cast<uint8_t *>(&response))) {
-        return false;
-      }
-      int16_t rotation = response & ((1 << 14) - 1);
-      set_count(rotation * cpr + count);
-      break;
-    }
-    }
+
+    set_count(get_count() + delta);
+    prev_count_ = count;
+
+    // switch (type_) {
+    // case Type::SINGLE_TURN: {
+    //   int16_t delta = count - prev_count_;
+    //   if (delta > (cpr / 2)) {
+    //     delta -= cpr;
+    //   } else if (delta < -(cpr / 2)) {
+    //     delta += cpr;
+    //   }
+    //   set_count(get_count() + delta);
+    //   prev_count_ = count;
+    //   break;
+    // }
+    // case Type::MULTI_TURN: {
+    //   uint16_t response;
+    //   if (!send_command(0x01, reinterpret_cast<uint8_t *>(&response))) {
+    //     return false;
+    //   }
+    //   int16_t rotation = response & ((1 << 14) - 1);
+    //   set_count(rotation * cpr + count);
+    //   break;
+    // }
+    // }
     return true;
   }
 
@@ -74,7 +89,7 @@ public:
 private:
   peripheral::UART &uart_;
   Resolution resolution_;
-  Type type_;
+  Mode mode_;
   uint8_t address_;
   int16_t prev_count_ = 0;
 
