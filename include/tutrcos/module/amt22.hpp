@@ -20,20 +20,20 @@ public:
     _14 = 14,
   };
 
-  enum class Type {
+  enum class Mode {
     SINGLE_TURN,
     MULTI_TURN,
   };
 
   AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, Resolution resolution,
-        Type type)
+        Mode mode)
       : EncoderBase{1 << utility::to_underlying(resolution)}, spi_{spi},
-        cs_{cs}, resolution_{resolution}, type_{type} {}
+        cs_{cs}, resolution_{resolution}, mode_{mode} {}
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
-    switch (type_) {
-    case Type::SINGLE_TURN: {
+    switch (mode_) {
+    case Mode::SINGLE_TURN: {
       std::array<uint8_t, 2> command{0x00, 0x00};
       uint16_t response;
       if (!send_command(command.data(), reinterpret_cast<uint8_t *>(&response),
@@ -42,28 +42,23 @@ public:
       }
 
       int16_t count = response & (cpr - 1);
-      int16_t delta = count - prev_count_;
-      if (delta > (cpr / 2)) {
-        delta -= cpr;
-      } else if (delta < -(cpr / 2)) {
-        delta += cpr;
+      switch (mode_) {
+      case Mode::SINGLE_TURN: {
+        set_count(count);
+        break;
       }
-      set_count(get_count() + delta);
-      prev_count_ = count;
-      break;
-    }
-    case Type::MULTI_TURN: {
-      std::array<uint8_t, 4> command{0x00, 0xA0, 0x00, 0x00};
-      std::array<uint16_t, 2> response{};
-      if (!send_command(command.data(),
-                        reinterpret_cast<uint8_t *>(response.data()),
-                        command.size())) {
-        return false;
+      case Mode::MULTI_TURN: {
+        int16_t delta = count - prev_count_;
+        if (delta > (cpr / 2)) {
+          delta -= cpr;
+        } else if (delta < -(cpr / 2)) {
+          delta += cpr;
+        }
+        set_count(get_count() + delta);
+        prev_count_ = count;
+        break;
       }
-
-      int16_t count = response[1] & (cpr - 1);
-      int16_t rotation = response[0] & ((1 << 14) - 1);
-      set_count(rotation * cpr + count);
+      }
       break;
     }
     }
@@ -85,7 +80,7 @@ private:
   peripheral::SPI &spi_;
   peripheral::GPIO &cs_;
   Resolution resolution_;
-  Type type_;
+  Mode mode_;
   int16_t prev_count_ = 0;
 
   bool send_command(const uint8_t *command, uint8_t *response, size_t size) {

@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 
+#include "tutrcos/peripheral/gpio.hpp"
 #include "tutrcos/peripheral/uart.hpp"
 
 #include "encoder_base.hpp"
@@ -12,7 +13,7 @@
 namespace tutrcos {
 namespace module {
 
-class AMT21 : public EncoderBase {
+class AMT21_SoftDE : public EncoderBase {
 public:
   enum class Resolution : uint8_t {
     _12 = 12,
@@ -24,10 +25,11 @@ public:
     MULTI_TURN,
   };
 
-  AMT21(peripheral::UART &uart, Resolution resolution, Mode mode,
-        uint8_t address)
+  AMT21_SoftDE(peripheral::UART &uart, peripheral::GPIO &de,
+               Resolution resolution, Mode mode, uint8_t address)
       : EncoderBase{1 << utility::to_underlying(resolution)}, uart_{uart},
-        resolution_{resolution}, mode_{mode}, address_{address} {}
+        huart_{uart.get_hal_handle()}, de_{de}, resolution_{resolution},
+        mode_{mode}, address_{address} {}
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
@@ -68,6 +70,8 @@ public:
 
 private:
   peripheral::UART &uart_;
+  UART_HandleTypeDef *huart_;
+  peripheral::GPIO &de_;
   Resolution resolution_;
   Mode mode_;
   uint8_t address_;
@@ -76,18 +80,22 @@ private:
   bool send_command(uint8_t command, uint8_t *response) {
     uint8_t data = address_ | command;
     uart_.flush();
-    if (!uart_.transmit(&data, 1, 1)) {
+    de_.write(true);
+    if (HAL_UART_Transmit(huart_, &data, 1, 1) != HAL_OK) {
       return false;
     }
+    de_.write(false);
     uart_.receive(reinterpret_cast<uint8_t *>(response), 2, 1);
     return checksum(response[0], response[1]);
   }
 
   bool send_extended_command(uint8_t command) {
     std::array<uint8_t, 2> data{static_cast<uint8_t>(address_ | 0x02), command};
-    if (!uart_.transmit(data.data(), data.size(), 1)) {
+    de_.write(true);
+    if (HAL_UART_Transmit(huart_, data.data(), data.size(), 1) != HAL_OK) {
       return false;
     }
+    de_.write(false);
     return true;
   }
 
