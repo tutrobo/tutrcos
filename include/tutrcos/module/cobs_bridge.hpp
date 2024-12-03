@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
@@ -23,23 +24,17 @@ public:
 
   bool transmit(const COBSBridgeMessage &msg, uint32_t timeout) {
     // id(1 byte) + data(n byte) + checksum(1 byte) + delimiter(1 byte)
-    if (!msg.data.empty()) {
-      tx_buf_.resize(COBS_ENCODE_DST_BUF_LEN_MAX(msg.data.size()) + 3);
-      cobs_encode_result res =
-          cobs_encode(tx_buf_.data() + 1, tx_buf_.size() - 3, msg.data.data(),
-                      msg.data.size());
-      if (res.status != COBS_ENCODE_OK) {
-        return false;
-      }
-      tx_buf_.resize(res.out_len + 3);
-    } else {
-      tx_buf_.resize(3);
+    std::vector<uint8_t> src(msg.data.size() + 1);
+    src[0] = msg.id;
+    std::copy(msg.data.begin(), msg.data.end(), src.begin() + 1);
+    buf.push_back(checksum(src.data(), src.size()));
+
+    std::vector<uint8_t> dest;
+    if (!utility::cobs_encode(src, dest)) {
+      return false;
     }
 
-    tx_buf_[0] = msg.id;
-    tx_buf_[tx_buf_.size() - 2] = checksum(tx_buf_.data(), tx_buf_.size() - 2);
-    tx_buf_[tx_buf_.size() - 1] = 0; // delimiter
-    return uart_.transmit(tx_buf_.data(), tx_buf_.size(), timeout);
+    return uart_.transmit(dest.data(), dest.size(), timeout);
   }
 
   bool receive(COBSBridgeMessage &msg, uint32_t timeout) {
@@ -52,44 +47,32 @@ public:
       core::Thread::delay(1);
     }
 
-    if (rx_buf_.size() < 3) {
-      rx_buf_.clear();
-      return false;
-    }
-    if (checksum(rx_buf_.data(), rx_buf_.size() - 2) !=
-        rx_buf_[rx_buf_.size() - 2]) {
-      rx_buf_.clear();
+    std::vector<uint8_t> dest;
+    if (!utility::cobs_decode(buf_, dest)) {
+      buf_.clear();
       return false;
     }
 
-    if (rx_buf_.size() > 3) {
-      msg.data.resize(COBS_DECODE_DST_BUF_LEN_MAX(rx_buf_.size() - 3));
-      cobs_decode_result res =
-          cobs_decode(msg.data.data(), msg.data.size(), rx_buf_.data() + 1,
-                      rx_buf_.size() - 3);
-      if (res.status != COBS_DECODE_OK) {
-        rx_buf_.clear();
-        return false;
-      }
-      msg.data.resize(res.out_len);
-    } else {
-      msg.data.resize(0);
+    if (checksum(dest.data(), dest.size() - 1) != dest[dest.size()]) {
+      buf_.clear();
+      return false;
     }
 
-    msg.id = rx_buf_[0];
-    rx_buf_.clear();
+    msg.id = dest[0];
+    msg.data.resize(dest.size() - 1);
+    std::copy(dest.begin() + 1, dest.end(), msg.data.begin());
+    buf_.clear();
     return true;
   }
 
 private:
   peripheral::UART &uart_;
-  std::vector<uint8_t> tx_buf_;
-  std::vector<uint8_t> rx_buf_;
+  std::vector<uint8_t> buf_;
 
   bool read_to_end() {
     uint8_t tmp;
     while (uart_.receive(&tmp, 1, 0)) {
-      rx_buf_.push_back(tmp);
+      buf_.push_back(tmp);
       if (tmp == 0x00) {
         return true;
       }
@@ -102,7 +85,7 @@ private:
     for (size_t i = 0; i < size; ++i) {
       res += data[i];
     }
-    return 0x80 | (res & 0x7F);
+    return res;
   }
 };
 

@@ -39,7 +39,8 @@ inline bool cobs_encode(const std::vector<uint8_t> &src,
   if (res.status != COBS_ENCODE_OK) {
     return false;
   }
-  dest.resize(res.out_len);
+  dest.resize(res.out_len + 1);
+  dest[dest.size()] = 0;
   return true;
 }
 
