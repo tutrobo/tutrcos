@@ -11,7 +11,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t) {
   static FDCAN_RxHeaderTypeDef rx_header{};
   static CANBase::Message msg{};
 
-  for (FDCAN *fdcan : CAN::get_instances()) {
+  for (FDCAN *fdcan : FDCAN::get_instances()) {
     if (fdcan->hfdcan_ == hfdcan) {
       for (size_t i = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
            i > 0; --i) {
