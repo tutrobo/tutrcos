@@ -32,33 +32,28 @@ public:
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
+    std::array<uint8_t, 2> command{0x00, 0x00};
+    uint16_t response;
+    if (!send_command(command.data(), reinterpret_cast<uint8_t *>(&response),
+                      command.size())) {
+      return false;
+    }
+
+    int16_t count = response & (cpr - 1);
     switch (mode_) {
     case Mode::SINGLE_TURN: {
-      std::array<uint8_t, 2> command{0x00, 0x00};
-      uint16_t response;
-      if (!send_command(command.data(), reinterpret_cast<uint8_t *>(&response),
-                        command.size())) {
-        return false;
+      set_count(count);
+      break;
+    }
+    case Mode::MULTI_TURN: {
+      int16_t delta = count - prev_count_;
+      if (delta > (cpr / 2)) {
+        delta -= cpr;
+      } else if (delta < -(cpr / 2)) {
+        delta += cpr;
       }
-
-      int16_t count = response & (cpr - 1);
-      switch (mode_) {
-      case Mode::SINGLE_TURN: {
-        set_count(count);
-        break;
-      }
-      case Mode::MULTI_TURN: {
-        int16_t delta = count - prev_count_;
-        if (delta > (cpr / 2)) {
-          delta -= cpr;
-        } else if (delta < -(cpr / 2)) {
-          delta += cpr;
-        }
-        set_count(get_count() + delta);
-        prev_count_ = count;
-        break;
-      }
-      }
+      set_count(get_count() + delta);
+      prev_count_ = count;
       break;
     }
     }
