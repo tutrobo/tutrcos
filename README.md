@@ -105,3 +105,5 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 ## ライセンス
 
 MIT License
+
+本ライブラリに含まれる、Craig McQueen氏によるCOBS実装(cobs-c)はMIT Licenseに基づきます。
