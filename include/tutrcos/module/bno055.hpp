@@ -30,6 +30,8 @@ namespace module {
  *   UART uart3(&huart3);
  *   BNO055 bno055(uart3);
  *
+ *   bno055.init(500);
+ *
  *   while (true) {
  *     bno055.update();
  *
@@ -44,7 +46,9 @@ namespace module {
  */
 class BNO055 {
 public:
-  BNO055(peripheral::UART &uart, uint32_t timeout = 500) : uart_{uart} {
+  BNO055(peripheral::UART &uart, uint32_t timeout = 500) : uart_{uart} {}
+
+  bool init(uint32_t timeout) {
     uint32_t start = core::Kernel::get_ticks();
     while (core::Kernel::get_ticks() - start < timeout) {
       uint8_t data = 0x00;
@@ -59,37 +63,41 @@ public:
       if (!write_reg(0x3D, &data, 1)) {
         continue;
       }
-      return;
+      return true;
     }
-    Error_Handler();
+    return false;
   }
 
-  void update() {
+  bool update() {
     std::array<int16_t, 4> data;
-    if (read_reg(0x1A, reinterpret_cast<uint8_t *>(data.data()), 6)) {
-      euler_x_orig_ = data[0] / 900.0f;
-      euler_y_orig_ = data[1] / 900.0f;
-      euler_z_orig_ = data[2] / 900.0f;
-
-      euler_x_ = normalize_angle(euler_x_orig_ - euler_x_offset_);
-      euler_y_ = normalize_angle(euler_y_orig_ - euler_y_offset_);
-      euler_z_ = normalize_angle(euler_z_orig_ - euler_z_offset_);
+    if (!read_reg(0x1A, reinterpret_cast<uint8_t *>(data.data()), 6)) {
+      return false;
     }
-    if (read_reg(0x20, reinterpret_cast<uint8_t *>(data.data()), 8)) {
-      quat_w_orig_ = data[0] / 16384.0f;
-      quat_x_orig_ = data[1] / 16384.0f;
-      quat_y_orig_ = data[2] / 16384.0f;
-      quat_z_orig_ = data[3] / 16384.0f;
+    euler_x_orig_ = data[0] / 900.0f;
+    euler_y_orig_ = data[1] / 900.0f;
+    euler_z_orig_ = data[2] / 900.0f;
 
-      quat_w_ = quat_w_orig_ * quat_w_offset_ - quat_x_orig_ * quat_x_offset_ -
-                quat_y_orig_ * quat_y_offset_ - quat_z_orig_ * quat_z_offset_;
-      quat_x_ = quat_w_orig_ * quat_x_offset_ + quat_x_orig_ * quat_w_offset_ +
-                quat_y_orig_ * quat_z_offset_ - quat_z_orig_ * quat_y_offset_;
-      quat_y_ = quat_w_orig_ * quat_y_offset_ - quat_x_orig_ * quat_z_offset_ +
-                quat_y_orig_ * quat_w_offset_ + quat_z_orig_ * quat_x_offset_;
-      quat_z_ = quat_w_orig_ * quat_z_offset_ + quat_x_orig_ * quat_y_offset_ -
-                quat_y_orig_ * quat_x_offset_ + quat_z_orig_ * quat_w_offset_;
+    euler_x_ = normalize_angle(euler_x_orig_ - euler_x_offset_);
+    euler_y_ = normalize_angle(euler_y_orig_ - euler_y_offset_);
+    euler_z_ = normalize_angle(euler_z_orig_ - euler_z_offset_);
+
+    if (!read_reg(0x20, reinterpret_cast<uint8_t *>(data.data()), 8)) {
+      return false;
     }
+    quat_w_orig_ = data[0] / 16384.0f;
+    quat_x_orig_ = data[1] / 16384.0f;
+    quat_y_orig_ = data[2] / 16384.0f;
+    quat_z_orig_ = data[3] / 16384.0f;
+
+    quat_w_ = quat_w_orig_ * quat_w_offset_ - quat_x_orig_ * quat_x_offset_ -
+              quat_y_orig_ * quat_y_offset_ - quat_z_orig_ * quat_z_offset_;
+    quat_x_ = quat_w_orig_ * quat_x_offset_ + quat_x_orig_ * quat_w_offset_ +
+              quat_y_orig_ * quat_z_offset_ - quat_z_orig_ * quat_y_offset_;
+    quat_y_ = quat_w_orig_ * quat_y_offset_ - quat_x_orig_ * quat_z_offset_ +
+              quat_y_orig_ * quat_w_offset_ + quat_z_orig_ * quat_x_offset_;
+    quat_z_ = quat_w_orig_ * quat_z_offset_ + quat_x_orig_ * quat_y_offset_ -
+              quat_y_orig_ * quat_x_offset_ + quat_z_orig_ * quat_w_offset_;
+    return true;
   }
 
   void reset_euler() {
