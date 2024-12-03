@@ -14,18 +14,18 @@
 #include "peripheral/uart.hpp"
 #endif
 
-#ifdef HAL_CAN_MODULE_ENABLED
-#include "peripheral/can.hpp"
-#endif
-
-#ifdef HAL_FDCAN_MODULE_ENABLED
-#include "peripheral/fdcan.hpp"
+#ifdef HAL_SPI_MODULE_ENABLED
+#include "peripheral/spi.hpp"
 #endif
 
 #ifdef HAL_I2C_MODULE_ENABLED
 #include "peripheral/i2c_master.hpp"
 #endif
 
-#ifdef HAL_SPI_MODULE_ENABLED
-#include "peripheral/spi.hpp"
+#ifdef HAL_CAN_MODULE_ENABLED
+#include "peripheral/can.hpp"
+#endif
+
+#ifdef HAL_FDCAN_MODULE_ENABLED
+#include "peripheral/fdcan.hpp"
 #endif
