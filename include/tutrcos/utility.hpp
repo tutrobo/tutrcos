@@ -40,7 +40,7 @@ inline bool cobs_encode(const std::vector<uint8_t> &src,
     return false;
   }
   dest.resize(res.out_len + 1);
-  dest[dest.size()] = 0;
+  dest[res.out_len] = 0;
   return true;
 }
 
