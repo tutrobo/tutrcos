@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <functional>
 
-#include "instance_table.hpp"
+#include "tutrcos/utility.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -38,10 +38,17 @@ namespace peripheral {
 class GPIO {
 public:
   GPIO(GPIO_TypeDef *port, uint16_t pin) : port_{port}, pin_{pin} {
-    get_instances().set(pin_, this);
+    auto gpio =
+        std::find(get_instances().begin(), get_instances().end(), nullptr);
+    TUTRCOS_VERIFY(gpio != get_instances().end());
+    *gpio = this;
   }
 
-  ~GPIO() { get_instances().erase(pin_); }
+  ~GPIO() {
+    auto gpio = std::find(get_instances().begin(), get_instances().end(), this);
+    TUTRCOS_VERIFY(gpio != get_instances().end());
+    *gpio = nullptr;
+  }
 
   void write(bool state) {
     HAL_GPIO_WritePin(port_, pin_, static_cast<GPIO_PinState>(state));
@@ -64,8 +71,8 @@ private:
   uint16_t pin_;
   std::function<void()> callback_;
 
-  static inline InstanceTable<uint16_t, GPIO, 32> &get_instances() {
-    static InstanceTable<uint16_t, GPIO, 32> instances;
+  static inline std::array<GPIO *, 20> &get_instances() {
+    static std::array<GPIO *, 20> instances{};
     return instances;
   }
 

@@ -4,10 +4,13 @@
 
 #include "tutrcos/peripheral/gpio.hpp"
 
+using tutrcos::peripheral::GPIO;
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (auto gpio = tutrcos::peripheral::GPIO::get_instances().get(GPIO_Pin)) {
-    if (gpio->callback_) {
+  for (GPIO *gpio : GPIO::get_instances()) {
+    if (gpio->pin_ == GPIO_Pin && gpio->callback_) {
       gpio->callback_();
+      break;
     }
   }
 }

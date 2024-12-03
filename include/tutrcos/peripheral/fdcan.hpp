@@ -10,7 +10,6 @@
 #include "tutrcos/utility.hpp"
 
 #include "can_base.hpp"
-#include "instance_table.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -19,7 +18,10 @@ class FDCAN : public CANBase {
 public:
   FDCAN(FDCAN_HandleTypeDef *hfdcan, size_t rx_queue_size = 64)
       : hfdcan_{hfdcan}, rx_queue_{rx_queue_size} {
-    get_instances().set(hfdcan_, this);
+    auto fdcan =
+        std::find(get_instances().begin(), get_instances().end(), nullptr);
+    TUTRCOS_VERIFY(fdcan != get_instances().end());
+    *fdcan = this;
 
     TUTRCOS_VERIFY(HAL_FDCAN_ActivateNotification(
                        hfdcan_, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) == HAL_OK);
@@ -28,7 +30,10 @@ public:
 
   ~FDCAN() {
     TUTRCOS_VERIFY(HAL_FDCAN_Stop(hfdcan_) == HAL_OK);
-    get_instances().erase(hfdcan_);
+    auto fdcan =
+        std::find(get_instances().begin(), get_instances().end(), this);
+    TUTRCOS_VERIFY(fdcan != get_instances().end());
+    *fdcan = nullptr;
   }
 
   bool transmit(const Message &msg, uint32_t timeout) override {
@@ -100,9 +105,8 @@ private:
   FDCAN_HandleTypeDef *hfdcan_;
   core::Queue<Message> rx_queue_;
 
-  static inline InstanceTable<FDCAN_HandleTypeDef *, FDCAN, 32> &
-  get_instances() {
-    static InstanceTable<FDCAN_HandleTypeDef *, FDCAN, 32> instances;
+  static inline std::array<FDCAN *, 20> &get_instances() {
+    static std::array<FDCAN *, 20> instances{};
     return instances;
   }
 

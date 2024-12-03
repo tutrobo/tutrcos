@@ -9,7 +9,6 @@
 #include "tutrcos/utility.hpp"
 
 #include "can_base.hpp"
-#include "instance_table.hpp"
 
 namespace tutrcos {
 namespace peripheral {
@@ -18,7 +17,10 @@ class CAN : public CANBase {
 public:
   CAN(CAN_HandleTypeDef *hcan, size_t rx_queue_size = 64)
       : hcan_{hcan}, rx_queue_{rx_queue_size} {
-    get_instances().set(hcan_, this);
+    auto can =
+        std::find(get_instances().begin(), get_instances().end(), nullptr);
+    TUTRCOS_VERIFY(can != get_instances().end());
+    *can = this;
 
     CAN_FilterTypeDef filter{};
     filter.FilterIdHigh = 0;
@@ -45,7 +47,9 @@ public:
 
   ~CAN() {
     TUTRCOS_VERIFY(HAL_CAN_Stop(hcan_) == HAL_OK);
-    get_instances().erase(hcan_);
+    auto can = std::find(get_instances().begin(), get_instances().end(), this);
+    TUTRCOS_VERIFY(can != get_instances().end());
+    *can = nullptr;
   }
 
   bool transmit(const Message &msg, uint32_t timeout) override {
@@ -88,8 +92,8 @@ private:
   CAN_HandleTypeDef *hcan_;
   core::Queue<Message> rx_queue_;
 
-  static inline InstanceTable<CAN_HandleTypeDef *, CAN, 32> &get_instances() {
-    static InstanceTable<CAN_HandleTypeDef *, CAN, 32> instances;
+  static inline std::array<CAN *, 20> &get_instances() {
+    static std::array<CAN *, 20> instances{};
     return instances;
   }
 

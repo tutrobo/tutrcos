@@ -11,9 +11,9 @@ class TIM {
 public:
   TIM(TIM_HandleTypeDef *htim) : htim_{htim} {}
 
-  bool start_timer() { return HAL_TIM_Base_Start_IT(htim_) == HAL_OK; }
+  bool start_timer() { return HAL_TIM_Base_Start(htim_) == HAL_OK; }
 
-  bool stop_timer() { return HAL_TIM_Base_Stop_IT(htim_) == HAL_OK; }
+  bool stop_timer() { return HAL_TIM_Base_Stop(htim_) == HAL_OK; }
 
   bool start_pwm(uint32_t channel) {
     return HAL_TIM_PWM_Start(htim_, channel) == HAL_OK;

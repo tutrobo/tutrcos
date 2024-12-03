@@ -10,8 +10,6 @@
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
 
-#include "instance_table.hpp"
-
 extern "C" int _write(int file, char *ptr, int len);
 
 namespace tutrcos {
@@ -52,13 +50,18 @@ class UART {
 public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64)
       : huart_{huart}, rx_queue_{rx_queue_size} {
-    get_instances().set(huart_, this);
+    auto uart =
+        std::find(get_instances().begin(), get_instances().end(), nullptr);
+    TUTRCOS_VERIFY(uart != get_instances().end());
+    *uart = this;
     TUTRCOS_VERIFY(HAL_UART_Receive_IT(huart_, &rx_buf_, 1) == HAL_OK);
   }
 
   ~UART() {
     TUTRCOS_VERIFY(HAL_UART_Abort(huart_) == HAL_OK);
-    get_instances().erase(huart_);
+    auto uart = std::find(get_instances().begin(), get_instances().end(), this);
+    TUTRCOS_VERIFY(uart != get_instances().end());
+    *uart = nullptr;
   }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
@@ -72,7 +75,7 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      sem_.try_acquire(1);
+      core::Thread::delay(1);
     }
     return true;
   }
@@ -85,7 +88,7 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      sem_.try_acquire(1);
+      core::Thread::delay(1);
     }
     for (size_t i = 0; i < size; ++i) {
       rx_queue_.pop(data[i], 0);
@@ -105,12 +108,12 @@ public:
 private:
   UART_HandleTypeDef *huart_;
   core::Mutex mtx_;
-  core::Semaphore sem_{1, 0};
   core::Queue<uint8_t> rx_queue_;
-  uint8_t rx_buf_;
 
-  static inline InstanceTable<UART_HandleTypeDef *, UART, 32> &get_instances() {
-    static InstanceTable<UART_HandleTypeDef *, UART, 32> instances;
+  static inline uint8_t rx_buf_;
+
+  static inline std::array<UART *, 20> &get_instances() {
+    static std::array<UART *, 20> instances{};
     return instances;
   }
 
@@ -119,7 +122,6 @@ private:
     return uart;
   }
 
-  friend void ::HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
   friend void ::HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart);
   friend int ::_write(int file, char *ptr, int len);

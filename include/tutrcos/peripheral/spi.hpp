@@ -9,21 +9,14 @@
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
 
-#include "instance_table.hpp"
-
 namespace tutrcos {
 namespace peripheral {
 
 class SPI {
 public:
-  SPI(SPI_HandleTypeDef *hspi) : hspi_{hspi} {
-    get_instances().set(hspi_, this);
-  }
+  SPI(SPI_HandleTypeDef *hspi) : hspi_{hspi} {}
 
-  ~SPI() {
-    TUTRCOS_VERIFY(HAL_SPI_Abort(hspi_) == HAL_OK);
-    get_instances().erase(hspi_);
-  }
+  ~SPI() { TUTRCOS_VERIFY(HAL_SPI_Abort(hspi_) == HAL_OK); }
 
   bool transmit(const uint8_t *data, size_t size, uint32_t timeout) {
     std::lock_guard lock{mtx_};
@@ -36,7 +29,7 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      sem_.try_acquire(1);
+      core::Thread::delay(1);
     }
     return true;
   }
@@ -52,7 +45,7 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      sem_.try_acquire(1);
+      core::Thread::delay(1);
     }
     return true;
   }
@@ -69,7 +62,7 @@ public:
       if (elapsed >= timeout) {
         return false;
       }
-      sem_.try_acquire(1);
+      core::Thread::delay(1);
     }
     return true;
   }
@@ -79,17 +72,6 @@ public:
 private:
   SPI_HandleTypeDef *hspi_;
   core::Mutex mtx_;
-  core::Semaphore sem_{1, 0};
-
-  static inline InstanceTable<SPI_HandleTypeDef *, SPI, 32> &get_instances() {
-    static InstanceTable<SPI_HandleTypeDef *, SPI, 32> instances;
-    return instances;
-  }
-
-  friend void ::HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi);
-  friend void ::HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi);
-  friend void ::HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
-  friend void ::HAL_SPI_AbortCpltCallback(SPI_HandleTypeDef *hspi);
 };
 
 } // namespace peripheral
