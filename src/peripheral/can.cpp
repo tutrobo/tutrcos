@@ -17,7 +17,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
            --i) {
         if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header,
                                  msg.data.data()) != HAL_OK) {
-          return;
+          break;
         }
 
         switch (rx_header.IDE) {
@@ -34,6 +34,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
         can->rx_queue_.push(msg, 0);
       }
+      break;
     }
   }
 }

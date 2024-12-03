@@ -17,7 +17,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t) {
            i > 0; --i) {
         if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header,
                                    msg.data.data()) != HAL_OK) {
-          return;
+          break;
         }
 
         msg.id = rx_header.Identifier;
@@ -61,6 +61,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t) {
 
         fdcan->rx_queue_.push(msg, 0);
       }
+      break;
     }
   }
 }

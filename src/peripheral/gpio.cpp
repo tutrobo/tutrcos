@@ -8,8 +8,10 @@ using tutrcos::peripheral::GPIO;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   for (GPIO *gpio : GPIO::get_instances()) {
-    if (gpio->pin_ == GPIO_Pin && gpio->callback_) {
-      gpio->callback_();
+    if (gpio->pin_ == GPIO_Pin) {
+      if (gpio->callback_) {
+        gpio->callback_();
+      }
       break;
     }
   }
