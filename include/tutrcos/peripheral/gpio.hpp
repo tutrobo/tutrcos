@@ -13,7 +13,7 @@ namespace peripheral {
 
 /**
  * `GPIO::set_callback` を使う場合は System Core -> GPIO -> NVIC -> EXTI
- * line[x:x] interrupts を有効化してください。
+ * line x interrupts を有効化してください。
  *
  * @code{.cpp}
  * #include <tutrcos.hpp>
