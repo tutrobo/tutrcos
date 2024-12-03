@@ -20,6 +20,7 @@ namespace peripheral {
  * interrupt を有効化してください。
  *
  * @code{.cpp}
+ * #include <cstdio>
  * #include <tutrcos.hpp>
  *
  * extern UART_HandleTypeDef huart2;
@@ -29,6 +30,7 @@ namespace peripheral {
  *   using namespace tutrcos::peripheral;
  *
  *   UART uart2(&huart2);
+ *   uart2.enable_stdout();
  *
  *   while (true) {
  *     // 7バイト送信
@@ -38,7 +40,7 @@ namespace peripheral {
  *     // 1バイト受信
  *     char c;
  *     if (uart2.receive((uint8_t *)&c, 1, Kernel::MAX_DELAY)) {
- *       uart2.printf("入力した文字: %c\r\n", c);
+ *       printf("入力した文字: %c\r\n", c);
  *     }
  *
  *     Thread::delay(10);

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <algorithm>
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 
 namespace tutrcos {
 namespace module {
@@ -11,16 +11,18 @@ class EncoderBase {
 public:
   EncoderBase(int64_t cpr) : cpr_{cpr} {}
   virtual ~EncoderBase() {}
-  virtual int64_t get_count() { return count_; }
+
+  int64_t get_cpr() { return cpr_; }
+  int64_t get_count() { return count_; }
+
   virtual float get_rotation() { return static_cast<float>(count_) / cpr_; }
-  virtual float get_degree() { return get_rotation() * 360; }
   virtual float get_rad() { return get_rotation() * 2 * M_PI; }
+  virtual float get_degree() { return get_rotation() * 360; }
 
   virtual float get_rps() { return delta_ / dt_ / cpr_; }
   virtual float get_rpm() { return get_rps() * 60; }
   virtual float get_radps() { return get_rps() * 2 * M_PI; }
-
-  int64_t get_cpr() { return cpr_; }
+  virtual float get_radpm() { return get_rpm() * 2 * M_PI; }
 
 protected:
   void set_count(int64_t count) {
