@@ -27,7 +27,7 @@ public:
     std::vector<uint8_t> src(msg.data.size() + 1);
     src[0] = msg.id;
     std::copy(msg.data.begin(), msg.data.end(), src.begin() + 1);
-    buf.push_back(checksum(src.data(), src.size()));
+    src.push_back(checksum(src.data(), src.size()));
 
     std::vector<uint8_t> dest;
     if (!utility::cobs_encode(src, dest)) {
