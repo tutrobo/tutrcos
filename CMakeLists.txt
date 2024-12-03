@@ -8,7 +8,6 @@ target_sources(${PROJECT_NAME} INTERFACE
   src/peripheral/can.cpp
   src/peripheral/fdcan.cpp
   src/peripheral/gpio.cpp
-  src/peripheral/spi.cpp
   src/peripheral/uart.cpp
   cobs-c/cobs.c
 )
