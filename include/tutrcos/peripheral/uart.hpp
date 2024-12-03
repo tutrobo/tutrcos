@@ -2,10 +2,10 @@
 
 #include "main.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
-#include <vector>
 
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"

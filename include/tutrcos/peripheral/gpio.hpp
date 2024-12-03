@@ -2,6 +2,7 @@
 
 #include "main.h"
 
+#include <array>
 #include <cstdint>
 #include <functional>
 

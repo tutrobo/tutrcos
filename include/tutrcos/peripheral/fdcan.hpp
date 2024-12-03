@@ -2,9 +2,9 @@
 
 #include "main.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <map>
 
 #include "tutrcos/core.hpp"
 #include "tutrcos/utility.hpp"
