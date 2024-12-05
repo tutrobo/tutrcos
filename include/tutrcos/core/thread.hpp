@@ -44,6 +44,7 @@ private:
 
   static inline void func_internal(void *thread) {
     reinterpret_cast<tutrcos::core::Thread *>(thread)->func_();
+    exit();
   }
 };
 
