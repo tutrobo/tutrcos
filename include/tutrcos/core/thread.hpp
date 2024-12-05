@@ -33,6 +33,8 @@ public:
 
   static inline void delay_until(uint32_t ticks) { osDelayUntil(ticks); }
 
+  [[noreturn]] static inline void exit() { osThreadExit(); }
+
 private:
   static constexpr uint32_t STACK_SIZE = 4096;
   static constexpr osPriority_t PRIORITY = osPriorityNormal;
