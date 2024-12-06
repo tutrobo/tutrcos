@@ -48,8 +48,7 @@ inline bool cobs_decode(const std::vector<uint8_t> &src,
   dest.resize(COBS_DECODE_DST_BUF_LEN_MAX(src.size()));
   cobs_decode_result res =
       ::cobs_decode(dest.data(), dest.size(), src.data(), src.size());
-  if (res.status != COBS_DECODE_OK &&
-      res.status != COBS_DECODE_ZERO_BYTE_IN_INPUT) {
+  if (res.status != COBS_DECODE_OK) {
     return false;
   }
   dest.resize(res.out_len);
