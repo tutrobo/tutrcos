@@ -28,7 +28,9 @@ public:
   AMT22(peripheral::SPI &spi, peripheral::GPIO &cs, Resolution resolution,
         Mode mode)
       : EncoderBase{1 << utility::to_underlying(resolution)}, spi_{spi},
-        cs_{cs}, resolution_{resolution}, mode_{mode} {}
+        cs_{cs}, resolution_{resolution}, mode_{mode} {
+    cs_.write(true);
+  }
 
   bool update() {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
