@@ -142,9 +142,16 @@ public:
 
   ~C6x0() { manager_.motors_[utility::to_underlying(id_)] = nullptr; }
 
+  [[deprecated("please use manager update()")]]
+  bool update() override {
+    return true;
+  }
+
   float get_rps() override { return get_rpm() / 60; }
 
   float get_rpm() override { return rpm_; }
+
+  Type get_type() { return type_; }
 
   int16_t get_current() {
     switch (type_) {

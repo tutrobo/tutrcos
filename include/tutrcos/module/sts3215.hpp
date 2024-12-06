@@ -71,7 +71,7 @@ public:
   STS3215(peripheral::UART &uart, Mode mode, uint8_t id)
       : EncoderBase{ppr_}, uart_{uart}, mode_{mode}, id_{id} {}
 
-  bool update() {
+  bool update() orverride {
     uint8_t rx_data[8] = {0};
     uart_.flush();
     if (send({0x02, 0x38, 0x02})) {
