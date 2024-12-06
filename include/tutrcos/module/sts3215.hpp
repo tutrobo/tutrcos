@@ -17,7 +17,7 @@ namespace module {
 /**
  *
  * modeはSTS3215のworkmodeの設定に応じて選択してください。
- * シリアル通信のbaudrateが1Mbpsだと、オーバーランエラーになる可能性が高いです（処理能力依存）
+ * シリアル通信のbaudrateが1Mbpsだと、オーバーランエラーになる可能性があります（処理能力依存）
  * 500kbps以下を推奨します。
  *
  * @code{.cpp}
