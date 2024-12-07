@@ -63,13 +63,19 @@ namespace module {
  */
 class STS3215 : public EncoderBase {
 public:
-  enum class Mode {
+  enum class WorkMode {
     RAD = 0,
     PWM = 2,
   };
 
-  STS3215(peripheral::UART &uart, Mode mode, uint8_t id)
-      : EncoderBase{ppr_}, uart_{uart}, mode_{mode}, id_{id} {}
+  enum class Mode {
+    SINGLE_TURN,
+    MULTI_TURN,
+  };
+
+  STS3215(peripheral::UART &uart, WorkMode workmode, uint8_t id, Mode mode)
+      : EncoderBase{ppr_}, uart_{uart}, workmode_{workmode}, id_{id},
+        mode_{mode} {}
 
   bool update() override {
     uint8_t rx_data[8] = {0};
@@ -87,13 +93,22 @@ public:
           int16_t count = static_cast<int16_t>(rx_data[6] << 8) | rx_data[5];
           int16_t delta = count - prev_count_;
 
-          if (delta > (ppr_ / 2)) {
-            delta -= ppr_;
-          } else if (delta < -(ppr_ / 2)) {
-            delta += ppr_;
+          switch (mode_) {
+          case Mode::SINGLE_TURN: {
+            set_count(count);
+            break;
+          }
+          case Mode::MULTI_TURN: {
+            if (delta > (ppr_ / 2)) {
+              delta -= ppr_;
+            } else if (delta < -(ppr_ / 2)) {
+              delta += ppr_;
+            }
+            set_count(get_count() + delta);
+            break;
+          }
           }
 
-          set_count(get_count() + delta);
           prev_count_ = count;
         }
       }
@@ -103,15 +118,15 @@ public:
     // transmit
     int16_t target = 0;
     uint8_t upper, lower;
-    switch (mode_) {
-    case Mode::RAD:
+    switch (workmode_) {
+    case WorkMode::RAD:
       ref_ = std::clamp<float>(ref_, 0, 2 * M_PI);
       target = ref_ / (2 * M_PI) * (ppr_ - 1);
       upper = static_cast<uint8_t>(target >> 8);
       lower = static_cast<uint8_t>(target);
       res = send({0x03, 0x2A, lower, upper});
       break;
-    case Mode::PWM:
+    case WorkMode::PWM:
       ref_ = std::clamp<float>(ref_, -1, 1);
       target = static_cast<uint16_t>(abs(ref_ * 1023));
       upper = static_cast<uint8_t>(target >> 8) | ((ref_ > 0) ? 0x04 : 0);
@@ -124,11 +139,14 @@ public:
 
   void set_ref(float value) { ref_ = value; }
 
+  Mode get_mode() { return mode_; };
+
 private:
   inline static constexpr uint16_t ppr_ = 4096;
   peripheral::UART &uart_;
-  Mode mode_;
+  const WorkMode workmode_;
   const uint8_t id_;
+  const Mode mode_;
   float ref_ = 0;
   int16_t prev_count_ = 0;
   int16_t rpm_ = 0;
