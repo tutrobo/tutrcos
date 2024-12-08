@@ -170,16 +170,17 @@ public:
 
   virtual ~Cybergear() {}
 
-  bool update() override { return true; }
-
-  void set_current(float value) {
+  bool update() override {
     // if(stop_flag) {
     //   set_motor_mode(MotorMode::CURRENT);
     //   enable();
     // }
     enable();
-    setCurRef(value);
+    setCurRef(current_);
+    return true;
   }
+
+  void set_current(float ampare) { current_ = ampare; }
 
   void stop() {
     // setMode(MotorMode::NONE);
@@ -468,6 +469,7 @@ private:
   uint8_t receive_buffer_[64];
   unsigned long send_count_;
   bool stop_flag = true;
+  float current_;
 };
 
 // void set_limit_speed(float speed) { writeFloat(motor_id_, ADDR_LIMIT_SPEED,
