@@ -12,8 +12,7 @@ public:
   EncoderBase(int64_t cpr) : cpr_{cpr} {}
   virtual ~EncoderBase() {}
 
-  int64_t get_cpr() { return cpr_; }
-  int64_t get_count() { return count_; }
+  virtual bool update() = 0;
 
   virtual float get_rotation() { return static_cast<float>(count_) / cpr_; }
   virtual float get_rad() { return get_rotation() * 2 * M_PI; }
@@ -23,6 +22,9 @@ public:
   virtual float get_rpm() { return get_rps() * 60; }
   virtual float get_radps() { return get_rps() * 2 * M_PI; }
   virtual float get_radpm() { return get_rpm() * 2 * M_PI; }
+
+  int64_t get_cpr() { return cpr_; }
+  int64_t get_count() { return count_; }
 
 protected:
   void set_count(int64_t count) {

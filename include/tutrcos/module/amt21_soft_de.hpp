@@ -31,7 +31,7 @@ public:
         huart_{uart.get_hal_handle()}, de_{de}, resolution_{resolution},
         mode_{mode}, address_{address} {}
 
-  bool update() {
+  bool update() override {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
     uint16_t response;
     if (!send_command(0x00, reinterpret_cast<uint8_t *>(&response))) {
