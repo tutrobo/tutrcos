@@ -82,35 +82,36 @@ public:
     uart_.flush();
     if (send({0x02, 0x38, 0x02})) {
       // rx_data : 0xff 0xff id size cmd data data checksum
-      if (uart_.receive(rx_data, 8, 1)) {
-        uint8_t checksum = 0;
-        for (uint8_t i = 2; i < 8; i++) {
-          checksum += rx_data[i];
+      if (!uart_.receive(rx_data, 8, 2)) {
+        return false;
+      }
+      uint8_t checksum = 0;
+      for (uint8_t i = 2; i < 8; i++) {
+        checksum += rx_data[i];
+      }
+      if ((rx_data[0] == 0xff) && (rx_data[1] == 0xff) && (checksum == 0xff) &&
+          (rx_data[2] == id_)) {
+
+        int16_t count = static_cast<int16_t>(rx_data[6] << 8) | rx_data[5];
+        int16_t delta = count - prev_count_;
+
+        switch (mode_) {
+        case Mode::SINGLE_TURN: {
+          set_count(count);
+          break;
         }
-        if ((rx_data[0] == 0xff) && (rx_data[1] == 0xff) &&
-            (checksum == 0xff) && (rx_data[2] == id_)) {
-
-          int16_t count = static_cast<int16_t>(rx_data[6] << 8) | rx_data[5];
-          int16_t delta = count - prev_count_;
-
-          switch (mode_) {
-          case Mode::SINGLE_TURN: {
-            set_count(count);
-            break;
+        case Mode::MULTI_TURN: {
+          if (delta > (ppr_ / 2)) {
+            delta -= ppr_;
+          } else if (delta < -(ppr_ / 2)) {
+            delta += ppr_;
           }
-          case Mode::MULTI_TURN: {
-            if (delta > (ppr_ / 2)) {
-              delta -= ppr_;
-            } else if (delta < -(ppr_ / 2)) {
-              delta += ppr_;
-            }
-            set_count(get_count() + delta);
-            break;
-          }
-          }
-
-          prev_count_ = count;
+          set_count(get_count() + delta);
+          break;
         }
+        }
+
+        prev_count_ = count;
       }
     }
 
