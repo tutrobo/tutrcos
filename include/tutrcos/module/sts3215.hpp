@@ -50,7 +50,7 @@ namespace module {
  *       float error = x_target - x_actual;
  *
  *       // 出力(-1~1)を指定
- *       sts.set_ref(Kp * error);
+ *       sts.set_input(Kp * error);
  *
  *       // STS3215の回転速度と絶対位置を出力
  *       printf("%f %f\r\n", sts.get_rps(), sts.get_rotation());
@@ -114,32 +114,9 @@ public:
         prev_count_ = count;
       }
     }
-
-    bool res = true;
-    // transmit
-    int16_t target = 0;
-    uint8_t upper, lower;
-    switch (workmode_) {
-    case WorkMode::RAD:
-      ref_ = std::clamp<float>(ref_, 0, 2 * M_PI);
-      target = ref_ / (2 * M_PI) * (ppr_ - 1);
-      upper = static_cast<uint8_t>(target >> 8);
-      lower = static_cast<uint8_t>(target);
-      res = send({0x03, 0x2A, lower, upper});
-      break;
-    case WorkMode::PWM:
-      ref_ = std::clamp<float>(ref_, -1, 1);
-      target = static_cast<uint16_t>(abs(ref_ * 1023));
-      upper = static_cast<uint8_t>(target >> 8) | ((ref_ > 0) ? 0x04 : 0);
-      lower = static_cast<uint8_t>(target);
-      res = send({0x03, 0x2C, lower, upper});
-      break;
-    }
-    return res;
+    return send_input(input_);
   }
-
-  void set_ref(float value) { ref_ = value; }
-
+  void set_input(float value) { input_ = value; }
   Mode get_mode() { return mode_; };
 
 private:
@@ -148,11 +125,32 @@ private:
   const WorkMode workmode_;
   const uint8_t id_;
   const Mode mode_;
-  float ref_ = 0;
   int16_t prev_count_ = 0;
-  int16_t rpm_ = 0;
-  int16_t current_ = 0;
-  int16_t current_target_ = 0;
+  float input_ = 0;
+
+  bool send_input(float value) {
+    bool res = true;
+    // transmit
+    int16_t target = 0;
+    uint8_t upper, lower;
+    switch (workmode_) {
+    case WorkMode::RAD:
+      value = std::clamp<float>(value, 0, 2 * M_PI);
+      target = value / (2 * M_PI) * (ppr_ - 1);
+      upper = static_cast<uint8_t>(target >> 8);
+      lower = static_cast<uint8_t>(target);
+      res = send({0x03, 0x2A, lower, upper});
+      break;
+    case WorkMode::PWM:
+      value = std::clamp<float>(value, -1, 1);
+      target = static_cast<uint16_t>(abs(value * 1023));
+      upper = static_cast<uint8_t>(target >> 8) | ((value > 0) ? 0x04 : 0);
+      lower = static_cast<uint8_t>(target);
+      res = send({0x03, 0x2C, lower, upper});
+      break;
+    }
+    return res;
+  }
 
   bool send(std::vector<uint8_t> tx) {
     uint8_t size = tx.size() + 1;
