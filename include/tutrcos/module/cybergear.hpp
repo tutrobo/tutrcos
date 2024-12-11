@@ -175,6 +175,10 @@ public:
     //   set_motor_mode(MotorMode::CURRENT);
     //   enable();
     // }
+    return true;
+  }
+
+  bool transmit() {
     enable();
     setCurRef(current_);
     return true;

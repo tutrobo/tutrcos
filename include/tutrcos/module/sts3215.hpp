@@ -114,10 +114,33 @@ public:
         prev_count_ = count;
       }
     }
-    return send_input(input_);
+    return true;
   }
   void set_input(float value) { input_ = value; }
   Mode get_mode() { return mode_; };
+
+  bool transmit() {
+    int16_t target = 0;
+    uint8_t upper, lower;
+    bool res = true;
+    switch (workmode_) {
+    case WorkMode::RAD:
+      input_ = std::clamp<float>(input_, 0, 2 * M_PI);
+      target = input_ / (2 * M_PI) * (ppr_ - 1);
+      upper = static_cast<uint8_t>(target >> 8);
+      lower = static_cast<uint8_t>(target);
+      res = send({0x03, 0x2A, lower, upper});
+      break;
+    case WorkMode::PWM:
+      input_ = std::clamp<float>(input_, -1, 1);
+      target = static_cast<uint16_t>(abs(input_ * 1023));
+      upper = static_cast<uint8_t>(target >> 8) | ((input_ > 0) ? 0x04 : 0);
+      lower = static_cast<uint8_t>(target);
+      res = send({0x03, 0x2C, lower, upper});
+      break;
+    }
+    return res;
+  }
 
 private:
   inline static constexpr uint16_t ppr_ = 4096;
@@ -127,30 +150,6 @@ private:
   const Mode mode_;
   int16_t prev_count_ = 0;
   float input_ = 0;
-
-  bool send_input(float value) {
-    bool res = true;
-    // transmit
-    int16_t target = 0;
-    uint8_t upper, lower;
-    switch (workmode_) {
-    case WorkMode::RAD:
-      value = std::clamp<float>(value, 0, 2 * M_PI);
-      target = value / (2 * M_PI) * (ppr_ - 1);
-      upper = static_cast<uint8_t>(target >> 8);
-      lower = static_cast<uint8_t>(target);
-      res = send({0x03, 0x2A, lower, upper});
-      break;
-    case WorkMode::PWM:
-      value = std::clamp<float>(value, -1, 1);
-      target = static_cast<uint16_t>(abs(value * 1023));
-      upper = static_cast<uint8_t>(target >> 8) | ((value > 0) ? 0x04 : 0);
-      lower = static_cast<uint8_t>(target);
-      res = send({0x03, 0x2C, lower, upper});
-      break;
-    }
-    return res;
-  }
 
   bool send(std::vector<uint8_t> tx) {
     uint8_t size = tx.size() + 1;
