@@ -16,12 +16,34 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   TUTRCOS_VERIFY(HAL_UART_Receive_IT(huart, &UART::rx_buf_, 1) == HAL_OK);
 }
 
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
+  for (UART *uart : UART::get_instances()) {
+    if (uart->huart_ == huart) {
+      __disable_irq();
+      uart->rx_tail_ = Size;
+      __enable_irq();
+      break;
+    }
+  }
+}
+
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   TUTRCOS_VERIFY(HAL_UART_Abort_IT(huart) == HAL_OK);
 }
 
 void HAL_UART_AbortCpltCallback(UART_HandleTypeDef *huart) {
-  TUTRCOS_VERIFY(HAL_UART_Receive_IT(huart, &UART::rx_buf_, 1) == HAL_OK);
+  for (UART *uart : UART::get_instances()) {
+    if (uart->huart_ == huart) {
+      if (uart->enable_dma_) {
+        TUTRCOS_VERIFY(HAL_UARTEx_ReceiveToIdle_DMA(huart, uart->rx_vec_.data(),
+                                                    uart->rx_vec_.size()) ==
+                       HAL_OK);
+      } else {
+        TUTRCOS_VERIFY(HAL_UART_Receive_IT(huart, &UART::rx_buf_, 1) == HAL_OK);
+      }
+      break;
+    }
+  }
 }
 
 int _write(int, char *ptr, int len) {
