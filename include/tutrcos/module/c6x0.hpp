@@ -101,30 +101,48 @@ public:
           }
         }
       }
+      return true;
+    }
 
+    bool transmit() {
+      peripheral::CANBase::Message msg;
+      bool transmit_flag;
+
+      transmit_flag = false;
       msg.data.fill(0);
       msg.id_type = peripheral::CANBase::IDType::STANDARD;
       msg.id = 0x200;
       msg.dlc = 8;
       for (size_t i = 0; i < 4; ++i) {
         if (motors_[i]) {
+          transmit_flag = true;
           msg.data[i * 2] = motors_[i]->target_current_ >> 8;
           msg.data[i * 2 + 1] = motors_[i]->target_current_;
         }
       }
-      if (!can_.transmit(msg, 0)) {
-        return false;
+      if (transmit_flag) {
+        if (!can_.transmit(msg, 0)) {
+          return false;
+        }
       }
 
+      transmit_flag = false;
       msg.data.fill(0);
       msg.id = 0x1FF;
       for (size_t i = 0; i < 4; ++i) {
         if (motors_[i + 4]) {
+          transmit_flag = true;
           msg.data[i * 2] = motors_[i + 4]->target_current_ >> 8;
           msg.data[i * 2 + 1] = motors_[i + 4]->target_current_;
         }
       }
-      return can_.transmit(msg, 0);
+      if (transmit_flag) {
+        if (!can_.transmit(msg, 0)) {
+          return false;
+        }
+      }
+
+      return true;
     }
 
   private:
@@ -142,13 +160,11 @@ public:
 
   ~C6x0() { manager_.motors_[utility::to_underlying(id_)] = nullptr; }
 
-  [[deprecated("please use manager update()")]]
-  bool update() override {
-    return true;
-  }
+  bool transmit() { return manager_.transmit(); }
+
+  bool update() override { return manager_.update(); }
 
   float get_rps() override { return get_rpm() / 60; }
-
   float get_rpm() override { return rpm_; }
 
   Type get_type() { return type_; }
