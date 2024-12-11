@@ -98,6 +98,7 @@ public:
         if (elapsed >= timeout) {
           return false;
         }
+        core::Thread::delay(1);
       }
       for (size_t i = 0; i < size; ++i) {
         data[i] = rx_vec_[rx_head_++];
