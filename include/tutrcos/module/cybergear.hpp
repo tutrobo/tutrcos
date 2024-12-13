@@ -171,10 +171,7 @@ public:
   virtual ~Cybergear() {}
 
   bool update() override {
-    // if(stop_flag) {
-    //   set_motor_mode(MotorMode::CURRENT);
-    //   enable();
-    // }
+    // readRam(ADDR_MECH_POS);
     return true;
   }
 
@@ -196,23 +193,12 @@ public:
 
   void readRam(uint16_t index) {
     peripheral::CANBase::Message msg;
-    msg.data = {0};
-    std::array<uint8_t, 8U> data = {0x00};
+    std::array<uint8_t, 8U> data; // = {0x00};
+    data.fill(0);
     data[0] = static_cast<uint8_t>(index);
     data[1] = static_cast<uint8_t>(index >> 8);
-    // while(can_.receive(msg, 1));
-    // send(motor_id_, CMD_RAM_READ, master_id_, data);
-    // if(can_.receive(msg, 20)){
-    //   process_receive_data(msg);
-    // } else {
-    //   printf("timeout\r\n");
-    // }
     send(motor_id_, CMD_RAM_READ, master_id_, data);
-    while (can_.receive(msg, 10)) {
-      // printf("id:%x / ", msg.id);
-      // printf("dlc:%d / ", msg.dlc);
-      // for(uint8_t d : msg.data) printf("%02x, ", d);
-      // printf("\n");
+    while (can_.receive(msg, 1)) {
       process_receive_data(msg);
     }
   }
@@ -223,14 +209,15 @@ public:
       uint8_t packet_type = (msg.id & 0x3F000000) >> 24;
       switch (packet_type) {
       case CMD_RESPONSE:
-        // process_motor_packet(msg.data);
-        // printf("response\r\n");
+        process_motor_packet(msg.data);
+        printf("response\r\n");
         break;
       case CMD_RAM_READ:
         process_read_parameter_packet(msg.data);
         break;
-      // case CMD_GET_MOTOR_FAIL:
-      //   break;
+      case CMD_GET_MOTOR_FAIL:
+        printf("error\r\n");
+        break;
       default:
         printf("invalid response 0x%x\r\n", packet_type);
         break;
@@ -306,88 +293,62 @@ private:
     float float_data;
     memcpy(&float_data, &data[4], sizeof(float));
 
-    for (uint8_t d : data)
-      printf("%02x, ", d);
-    printf("data : %02x, %04x, %f / ", uint8_data, (uint16_t)int16_data,
-           float_data);
-    printf("\r\n");
-    return;
-
     switch (index) {
     case ADDR_RUN_MODE:
       motor_param_.run_mode = uint8_data;
-      printf("ADDR_RUN_MODE = [0x%02x]\n", uint8_data);
       break;
     case ADDR_IQ_REF:
       motor_param_.iq_ref = float_data;
-      printf("ADDR_IQ_REF = %f\r\n", float_data);
       break;
     case ADDR_SPEED_REF:
       motor_param_.spd_ref = float_data;
-      printf("ADDR_SPEED_REF = %f\r\n", float_data);
       break;
     case ADDR_LIMIT_TORQUE:
       motor_param_.limit_torque = float_data;
-      printf("ADDR_LIMIT_TORQUE = %f\r\n", float_data);
       break;
     case ADDR_CURRENT_KP:
       motor_param_.cur_kp = float_data;
-      printf("ADDR_CURRENT_KP = %f\r\n", float_data);
       break;
     case ADDR_CURRENT_KI:
       motor_param_.cur_ki = float_data;
-      printf("ADDR_CURRENT_KI = %f\r\n", float_data);
       break;
     case ADDR_CURRENT_FILTER_GAIN:
       motor_param_.cur_filt_gain = float_data;
-      printf("ADDR_CURRENT_FILTER_GAIN = %f\r\n", float_data);
       break;
     case ADDR_LOC_REF:
       motor_param_.loc_ref = float_data;
-      printf("ADDR_LOC_REF = %f\r\n", float_data);
       break;
     case ADDR_LIMIT_SPEED:
       motor_param_.limit_spd = float_data;
-      printf("ADDR_LIMIT_SPEED = %f\r\n", float_data);
       break;
     case ADDR_LIMIT_CURRENT:
       motor_param_.limit_cur = float_data;
-      printf("ADDR_LIMIT_CURRENT = %f\r\n", float_data);
       break;
     case ADDR_MECH_POS:
       motor_param_.mech_pos = float_data;
-      printf("ADDR_MECH_POS = %f\r\n", float_data);
       break;
     case ADDR_IQF:
       motor_param_.iqf = float_data;
-      printf("ADDR_IQF = %f\r\n", float_data);
       break;
     case ADDR_MECH_VEL:
       motor_param_.mech_vel = float_data;
-      printf("ADDR_MECH_VEL = %f\r\n", float_data);
       break;
     case ADDR_VBUS:
       motor_param_.vbus = float_data;
-      printf("ADDR_VBUS = %f\r\n", float_data);
       break;
     case ADDR_ROTATION:
       motor_param_.rotation = int16_data;
-      printf("ADDR_ROTATION = %d\r\n", int16_data);
       break;
     case ADDR_LOC_KP:
       motor_param_.loc_kp = float_data;
-      printf("ADDR_LOC_KP = %f\r\n", float_data);
       break;
     case ADDR_SPD_KP:
       motor_param_.spd_kp = float_data;
-      printf("ADDR_SPD_KP = %f\r\n", float_data);
       break;
     case ADDR_SPD_KI:
       motor_param_.spd_ki = float_data;
-      printf("ADDR_SPD_KI = %f\r\n", float_data);
       break;
     default:
-      printf("Unknown index = 0x%04x\r\n", index);
       // is_updated = false;
       break;
     }
