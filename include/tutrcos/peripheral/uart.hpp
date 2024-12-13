@@ -52,7 +52,7 @@ class UART {
 public:
   UART(UART_HandleTypeDef *huart, size_t rx_queue_size = 64,
        bool enable_dma = false)
-      : huart_{huart}, rx_queue_{rx_queue_size}, enable_dma_{enable_dma},
+      : huart_{huart}, enable_dma_{enable_dma}, rx_queue_{rx_queue_size},
         rx_vec_(rx_queue_size) {
     auto uart =
         std::find(get_instances().begin(), get_instances().end(), nullptr);
@@ -137,10 +137,10 @@ public:
 private:
   UART_HandleTypeDef *huart_;
   const bool enable_dma_;
-  core::Mutex mtx_;
   core::Queue<uint8_t> rx_queue_;
-  static inline uint8_t rx_buf_;
   std::vector<uint8_t> rx_vec_;
+  static inline uint8_t rx_buf_;
+  core::Mutex mtx_;
   size_t rx_head_ = 0;
   size_t rx_tail_ = 0;
 
