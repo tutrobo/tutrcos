@@ -82,7 +82,7 @@ public:
     uart_.flush();
     if (send({0x02, 0x38, 0x02})) {
       // rx_data : 0xff 0xff id size cmd data data checksum
-      if (!uart_.receive(rx_data, 8, 2)) {
+      if (!uart_.receive(rx_data, 8, 1)) {
         return false;
       }
       uint8_t checksum = 0;
@@ -116,6 +116,7 @@ public:
     }
     return true;
   }
+
   void set_input(float value) { input_ = value; }
   Mode get_mode() { return mode_; };
 
