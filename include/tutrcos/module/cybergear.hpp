@@ -132,7 +132,9 @@ public:
 
   bool update() override {
     float rad;
-    read_paramater(ADDR_MECH_POS, rad);
+    if (!read_paramater(ADDR_MECH_POS, rad)) {
+      return false;
+    }
     int16_t count = (rad / (2 * M_PI)) * get_cpr();
     int16_t delta = count - prev_count_;
 
