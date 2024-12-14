@@ -37,7 +37,7 @@ namespace module {
  *   uart2.enable_stdout();
  *
  *   UART uart3(&huart4);
- *   STS3215 sts(uart3, STS3215::Mode::PWM, 10);
+ *   STS3215 sts(uart3, STS3215::WorkMode::PWM, 10, STS3215::Mode::MULTI_TURN);
  *
  *   while (true) {
  *     if(!sts.update()){ // データ送受信
@@ -51,6 +51,7 @@ namespace module {
  *
  *       // 出力(-1~1)を指定
  *       sts.set_input(Kp * error);
+ *       sts.transmit();
  *
  *       // STS3215の回転速度と絶対位置を出力
  *       printf("%f %f\r\n", sts.get_rps(), sts.get_rotation());
@@ -101,10 +102,10 @@ public:
           break;
         }
         case Mode::MULTI_TURN: {
-          if (delta > (ppr_ / 2)) {
-            delta -= ppr_;
-          } else if (delta < -(ppr_ / 2)) {
-            delta += ppr_;
+          if (delta > (get_cpr() / 2)) {
+            delta -= get_cpr();
+          } else if (delta < -(get_cpr() / 2)) {
+            delta += get_cpr();
           }
           set_count(get_count() + delta);
           break;
