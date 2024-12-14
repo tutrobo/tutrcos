@@ -196,7 +196,7 @@ public:
     if (!send(motor_id_, CMD_RAM_READ, master_id_, data)) {
       return false;
     }
-    return receive(dest, CMD_RAM_READ, index, 1);
+    return receive(dest, CMD_RAM_READ, index, 2);
   }
 
 private:
