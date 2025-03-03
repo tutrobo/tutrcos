@@ -97,9 +97,7 @@ public:
                     core::Queue<Message> &queue) override {
     auto rx_queue = std::find(rx_queues_.begin(), rx_queues_.end(), nullptr);
     TUTRCOS_VERIFY(rx_queue != rx_queues_.end());
-    (*rx_queue)->id = id;
-    (*rx_queue)->mask = mask;
-    (*rx_queue)->rx_queue = &queue;
+    *rx_queue = new CANFilter{id, mask, &queue};
   }
 
   CAN_HandleTypeDef *get_hal_handle() { return hcan_; }

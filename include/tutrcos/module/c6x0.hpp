@@ -76,11 +76,13 @@ public:
 
   class Manager {
   public:
-    Manager(peripheral::CANBase &can) : can_{can} {}
+    Manager(peripheral::CANBase &can) : can_{can} {
+      can.add_rx_queue(0x200, 0x210, rx_queue_);
+    }
 
     bool update() {
       peripheral::CANBase::Message msg;
-      while (can_.receive(msg, 0)) {
+      while (rx_queue_.pop(msg, 0)) {
         if (msg.id >= 0x201 && msg.id < 0x201 + 8) {
           C6x0 *motor = motors_[msg.id - 0x201];
           if (motor) {
@@ -129,6 +131,7 @@ public:
 
   private:
     peripheral::CANBase &can_;
+    core::Queue<peripheral::CANBase::Message> rx_queue_{64};
     std::array<C6x0 *, 8> motors_{};
 
     friend C6x0;
