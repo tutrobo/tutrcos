@@ -137,8 +137,8 @@ private:
   peripheral::UART &uart_;
   std::array<uint8_t, 8> buf_{};
   std::array<float, 4> axes_{};
-  uint16_t keys_;
-  uint16_t keys_prev_;
+  uint16_t keys_ = 0;
+  uint16_t keys_prev_ = 0;
 };
 
 } // namespace module
