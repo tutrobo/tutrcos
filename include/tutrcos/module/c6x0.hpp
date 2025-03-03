@@ -77,7 +77,7 @@ public:
   class Manager {
   public:
     Manager(peripheral::CANBase &can) : can_{can} {
-      can.add_rx_queue(0x200, 0x210, rx_queue_);
+      can.add_rx_queue(0x200, 0x200, rx_queue_);
     }
 
     bool update() {
