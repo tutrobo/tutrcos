@@ -161,10 +161,11 @@ public:
   void set_current(int16_t current) {
     switch (type_) {
     case Type::C610:
-      target_current_ = current;
+      target_current_ = std::clamp<int16_t>(current, -10000, 10000);
       break;
     case Type::C620:
-      target_current_ = current * 16384 / 25000;
+      target_current_ =
+          std::clamp<int16_t>(current * 16384 / 25000, -10000, 10000);
       break;
     }
   }
