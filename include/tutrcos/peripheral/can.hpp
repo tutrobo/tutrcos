@@ -14,6 +14,12 @@
 namespace tutrcos {
 namespace peripheral {
 
+struct CANFilter {
+  uint32_t id;
+  uint32_t mask;
+  core::Queue<CANBase::Message> *rx_queue;
+};
+
 class CAN : public CANBase {
 public:
   CAN(CAN_HandleTypeDef *hcan, size_t rx_queue_size = 64)
@@ -87,11 +93,21 @@ public:
     return rx_queue_.pop(msg, timeout);
   }
 
+  void add_rx_queue(uint32_t id, uint32_t mask,
+                    core::Queue<Message> &queue) override {
+    auto rx_queue = std::find(rx_queues_.begin(), rx_queues_.end(), nullptr);
+    TUTRCOS_VERIFY(rx_queue != rx_queues_.end());
+    (*rx_queue)->id = id;
+    (*rx_queue)->mask = mask;
+    (*rx_queue)->rx_queue = &queue;
+  }
+
   CAN_HandleTypeDef *get_hal_handle() { return hcan_; }
 
 private:
   CAN_HandleTypeDef *hcan_;
   core::Queue<Message> rx_queue_;
+  std::array<CANFilter *, 20> rx_queues_{};
 
   static inline std::array<CAN *, 20> &get_instances() {
     static std::array<CAN *, 20> instances{};

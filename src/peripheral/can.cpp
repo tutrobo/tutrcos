@@ -32,7 +32,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
         }
         msg.dlc = rx_header.DLC;
 
-        can->rx_queue_.push(msg, 0);
+        // can->rx_queue_.push(msg, 0);
+        for (auto &rx_queue : can->rx_queues_) {
+          if (rx_queue) {
+            if ((msg.id & rx_queue->mask) == rx_queue->id) {
+              rx_queue->rx_queue->push(msg, 0);
+            }
+          }
+        }
       }
       break;
     }
