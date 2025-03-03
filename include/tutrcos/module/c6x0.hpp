@@ -154,18 +154,17 @@ public:
     case Type::C610:
       return current_;
     case Type::C620:
-      return current_ * 25000 / 16384;
+      return current_ * 20000 / 16384;
     }
   }
 
   void set_current(int16_t current) {
     switch (type_) {
     case Type::C610:
-      target_current_ = std::clamp<int16_t>(current, -10000, 10000);
+      target_current_ = current;
       break;
     case Type::C620:
-      target_current_ =
-          std::clamp<int16_t>(current * 16384 / 25000, -10000, 10000);
+      target_current_ = static_cast<int64_t>(current) * 16384 / 20000;
       break;
     }
   }
