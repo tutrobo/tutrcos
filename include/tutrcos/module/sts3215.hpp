@@ -37,7 +37,7 @@ namespace module {
  *   uart2.enable_stdout();
  *
  *   UART uart3(&huart4);
- *   STS3215 sts(uart3, STS3215::Mode::PWM, 10);
+ *   STS3215 sts(uart3, STS3215::WorkMode::PWM, 10, STS3215::Mode::MULTI_TURN);
  *
  *   while (true) {
  *     if(!sts.update()){ // データ送受信
@@ -50,7 +50,8 @@ namespace module {
  *       float error = x_target - x_actual;
  *
  *       // 出力(-1~1)を指定
- *       sts.set_ref(Kp * error);
+ *       sts.set_input(Kp * error);
+ *       sts.transmit();
  *
  *       // STS3215の回転速度と絶対位置を出力
  *       printf("%f %f\r\n", sts.get_rps(), sts.get_rotation());
@@ -63,58 +64,79 @@ namespace module {
  */
 class STS3215 : public EncoderBase {
 public:
-  enum class Mode {
+  enum class WorkMode {
     RAD = 0,
     PWM = 2,
   };
 
-  STS3215(peripheral::UART &uart, Mode mode, uint8_t id)
-      : EncoderBase{ppr_}, uart_{uart}, mode_{mode}, id_{id} {}
+  enum class Mode {
+    SINGLE_TURN,
+    MULTI_TURN,
+  };
 
-  bool update() {
+  STS3215(peripheral::UART &uart, WorkMode workmode, uint8_t id, Mode mode)
+      : EncoderBase{ppr_}, uart_{uart}, workmode_{workmode}, id_{id},
+        mode_{mode} {}
+
+  bool update() override {
     uint8_t rx_data[8] = {0};
     uart_.flush();
     if (send({0x02, 0x38, 0x02})) {
       // rx_data : 0xff 0xff id size cmd data data checksum
-      if (uart_.receive(rx_data, 8, 1)) {
-        uint8_t checksum = 0;
-        for (uint8_t i = 2; i < 8; i++) {
-          checksum += rx_data[i];
+      if (!uart_.receive(rx_data, 8, 1)) {
+        return false;
+      }
+      uint8_t checksum = 0;
+      for (uint8_t i = 2; i < 8; i++) {
+        checksum += rx_data[i];
+      }
+      if ((rx_data[0] == 0xff) && (rx_data[1] == 0xff) && (checksum == 0xff) &&
+          (rx_data[2] == id_)) {
+
+        int16_t count = static_cast<int16_t>(rx_data[6] << 8) | rx_data[5];
+        int16_t delta = count - prev_count_;
+
+        switch (mode_) {
+        case Mode::SINGLE_TURN: {
+          set_count(count);
+          break;
         }
-        if ((rx_data[0] == 0xff) && (rx_data[1] == 0xff) &&
-            (checksum == 0xff) && (rx_data[2] == id_)) {
-
-          int16_t count = static_cast<int16_t>(rx_data[6] << 8) | rx_data[5];
-          int16_t delta = count - prev_count_;
-
-          if (delta > (ppr_ / 2)) {
-            delta -= ppr_;
-          } else if (delta < -(ppr_ / 2)) {
-            delta += ppr_;
+        case Mode::MULTI_TURN: {
+          if (delta > (get_cpr() / 2)) {
+            delta -= get_cpr();
+          } else if (delta < -(get_cpr() / 2)) {
+            delta += get_cpr();
           }
-
           set_count(get_count() + delta);
-          prev_count_ = count;
+          break;
         }
+        }
+
+        prev_count_ = count;
       }
     }
+    return true;
+  }
 
-    bool res = true;
-    // transmit
+  void set_input(float value) { input_ = value; }
+  Mode get_mode() { return mode_; };
+
+  bool transmit() {
     int16_t target = 0;
     uint8_t upper, lower;
-    switch (mode_) {
-    case Mode::RAD:
-      ref_ = std::clamp<float>(ref_, 0, 2 * M_PI);
-      target = ref_ / (2 * M_PI) * (ppr_ - 1);
+    bool res = true;
+    switch (workmode_) {
+    case WorkMode::RAD:
+      input_ = std::clamp<float>(input_, 0, 2 * M_PI);
+      target = input_ / (2 * M_PI) * (ppr_ - 1);
       upper = static_cast<uint8_t>(target >> 8);
       lower = static_cast<uint8_t>(target);
       res = send({0x03, 0x2A, lower, upper});
       break;
-    case Mode::PWM:
-      ref_ = std::clamp<float>(ref_, -1, 1);
-      target = static_cast<uint16_t>(abs(ref_ * 1023));
-      upper = static_cast<uint8_t>(target >> 8) | ((ref_ > 0) ? 0x04 : 0);
+    case WorkMode::PWM:
+      input_ = std::clamp<float>(input_, -1, 1);
+      target = static_cast<uint16_t>(abs(input_ * 1023));
+      upper = static_cast<uint8_t>(target >> 8) | ((input_ > 0) ? 0x04 : 0);
       lower = static_cast<uint8_t>(target);
       res = send({0x03, 0x2C, lower, upper});
       break;
@@ -122,18 +144,14 @@ public:
     return res;
   }
 
-  void set_ref(float value) { ref_ = value; }
-
 private:
   inline static constexpr uint16_t ppr_ = 4096;
   peripheral::UART &uart_;
-  Mode mode_;
+  const WorkMode workmode_;
   const uint8_t id_;
-  float ref_ = 0;
+  const Mode mode_;
   int16_t prev_count_ = 0;
-  int16_t rpm_ = 0;
-  int16_t current_ = 0;
-  int16_t current_target_ = 0;
+  float input_ = 0;
 
   bool send(std::vector<uint8_t> tx) {
     uint8_t size = tx.size() + 1;

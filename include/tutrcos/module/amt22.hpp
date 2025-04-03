@@ -32,7 +32,7 @@ public:
     cs_.write(true);
   }
 
-  bool update() {
+  bool update() override {
     uint16_t cpr = 1 << utility::to_underlying(resolution_);
     std::array<uint8_t, 2> command{0x00, 0x00};
     uint16_t response;
